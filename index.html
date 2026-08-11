@@ -9,64 +9,277 @@
         h1, h2 { text-align: center; font-weight: 300; }
         header { padding: 3rem 1rem; background-color: #1e1e1e; border-bottom: 2px solid #333; }
         section { padding: 2rem 5%; }
+        
         .galeria-tabla { width: 100%; border-collapse: separate; border-spacing: 15px; table-layout: fixed; margin-top: 1.5rem; }
         .galeria-tabla td { padding: 0; vertical-align: middle; width: 25%; }
+        
         .item { position: relative; cursor: pointer; overflow: hidden; border-radius: 8px; aspect-ratio: 1 / 1; background-color: #222; width: 100%; }
         .item img, .item video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
         .item:hover img, .item:hover video { transform: scale(1.05); }
         .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255, 255, 255, 0.8); pointer-events: none; }
-        #visor-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(15px); align-items: center; justify-content: center; flex-direction: column; }
-        #titulo-album { position: absolute; top: 20px; color: white; font-size: 1.5rem; font-weight: 300; z-index: 1002; }
-        #contenido-modal { max-width: 85%; max-height: 80vh; display: flex; justify-content: center; align-items: center; }
-        #contenido-modal img, #contenido-modal video { max-width: 100%; max-height: 80vh; border-radius: 8px; }
-        .btn-nav { position: absolute; top: 50%; color: white; font-size: 3rem; cursor: pointer; z-index: 1002; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 5px; }
-        .btn-prev { left: 2%; } .btn-next { right: 2%; }
-        .cerrar-modal { position: absolute; top: 20px; right: 30px; font-size: 40px; cursor: pointer; z-index: 1002; }
+        
+        /* Etiqueta del título del álbum */
+        .item-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.85rem; padding: 8px; box-sizing: border-box; text-align: center; font-weight: 500; }
+
+        /* Visor Modal Carrusel */
+        #visor-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); align-items: center; justify-content: center; flex-direction: column; }
+        #titulo-album { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 1.5rem; font-weight: 300; letter-spacing: 2px; margin: 0; z-index: 1002; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        #contenido-modal { max-width: 85%; max-height: 80vh; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
+        #contenido-modal img, #contenido-modal video { max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); user-select: none; }
+
+        .btn-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 3rem; cursor: pointer; z-index: 1002; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 5px; transition: background 0.3s, transform 0.2s; user-select: none; }
+        .btn-nav:hover { background: rgba(0,0,0,0.8); transform: translateY(-50%) scale(1.1); }
+        .btn-prev { left: 2%; } 
+        .btn-next { right: 2%; }
+
+        .cerrar-modal { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 1002; transition: color 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .cerrar-modal:hover { color: #ff4444; }
     </style>
 </head>
 <body>
+
     <header>
         <h1>Mi Portafolio Visual</h1>
         <p style="text-align: center; color: #aaa;">Explora mi trabajo en fotografía y videografía</p>
     </header>
-    <section id="fotos"><h2>Álbum de Fotografías</h2><table class="galeria-tabla" id="tabla-fotos"></table></section>
-    <section id="videos"><h2>Galería de Videos</h2><table class="galeria-tabla" id="tabla-videos"></table></section>
+
+    <section id="fotos">
+        <h2>Álbumes de Fotografías</h2>
+        <table class="galeria-tabla" id="tabla-fotos"></table>
+    </section>
+
+    <section id="videos">
+        <h2>Galería de Videos</h2>
+        <table class="galeria-tabla" id="tabla-videos"></table>
+    </section>
+
     <div id="visor-modal">
-        <h2 id="titulo-album"></h2><span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
+        <h2 id="titulo-album">Nombre del Álbum</h2>
+        <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
         <div class="btn-nav btn-prev" onclick="navegar(-1)">&#10094;</div>
         <div class="btn-nav btn-next" onclick="navegar(1)">&#10095;</div>
         <div id="contenido-modal"></div>
     </div>
+
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         const firebaseConfig = { apiKey: "AIzaSyCd5evRX5lv8ulopShw0gJ_iCpnaMQxays", authDomain: "chica-americana.firebaseapp.com", projectId: "chica-americana", storageBucket: "chica-americana.firebasestorage.app", messagingSenderId: "20615894861", appId: "1:20615894861:web:67895bcdec88371e318904" };
         const db = getFirestore(initializeApp(firebaseConfig));
-        let portafolio = { fotos: [], videos: [] };
+
+        let albumesFotos = []; // Lista de álbumes de fotos
+        let listaVideos = [];  // Lista de videos
+
+        // Escuchar datos de Firebase en tiempo real
         onSnapshot(collection(db, "multimedia"), (snapshot) => {
-            portafolio.fotos = []; portafolio.videos = [];
-            snapshot.forEach((doc) => { const d = doc.data(); if(d.tipo === 'foto') portafolio.fotos.push(d.url); else portafolio.videos.push(d.url); });
+            albumesFotos = [];
+            listaVideos = [];
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const nombreItem = data.nombre || "Sin título";
+
+                if (data.tipo === 'foto') {
+                    let urlsArray = [];
+                    if (Array.isArray(data.url)) {
+                        urlsArray = data.url;
+                    } else if (typeof data.url === 'string') {
+                        urlsArray = [data.url];
+                    }
+
+                    if (urlsArray.length > 0) {
+                        albumesFotos.push({
+                            nombre: nombreItem,
+                            portada: urlsArray[0], // Primera foto como miniatura principal en el home
+                            fotos: urlsArray       // Todas las fotos que pertenecen a este álbum
+                        });
+                    }
+                } else if (data.tipo === 'video') {
+                    listaVideos.push({
+                        nombre: nombreItem,
+                        url: data.url
+                    });
+                }
+            });
+
             renderizarTablas();
         });
+
         function renderizarTablas() {
-            renderizarSeccion(portafolio.fotos, 'tabla-fotos', 'imagen');
-            renderizarSeccion(portafolio.videos, 'tabla-videos', 'video');
+            renderizarSeccionAlbumes(albumesFotos, 'tabla-fotos');
+            renderizarSeccionVideos(listaVideos, 'tabla-videos');
         }
-        function renderizarSeccion(arrayDatos, idTabla, tipo) {
-            const tabla = document.getElementById(idTabla); tabla.innerHTML = ''; let tr;
-            arrayDatos.forEach((url, i) => {
-                if(i % 4 === 0) { tr = document.createElement('tr'); tabla.appendChild(tr); }
+
+        function renderizarSeccionAlbumes(arrayAlbumes, idTabla) {
+            const tabla = document.getElementById(idTabla);
+            tabla.innerHTML = ''; 
+            let tr = null;
+
+            for (let i = 0; i < arrayAlbumes.length; i++) {
+                if (i % 4 === 0) {
+                    tr = document.createElement('tr');
+                    tabla.appendChild(tr);
+                }
                 const td = document.createElement('td');
-                td.innerHTML = `<div class="item" onclick="abrirModal('${tipo}', ${i})">${tipo==='imagen'?`<img src="${url}">`:`<video src="${url}"></video><div class="play-icon">▶</div>`}</div>`;
+                const album = arrayAlbumes[i];
+
+                let contenidoHtml = `
+                    <div class="item" onclick="abrirAlbumFotos(${i})">
+                        <img src="${album.portada}" alt="${album.nombre}">
+                        <div class="item-label">📁 ${album.nombre} (${album.fotos.length})</div>
+                    </div>`;
+                
+                td.innerHTML = contenidoHtml;
                 tr.appendChild(td);
-            });
+            }
+
+            // Rellenar celdas vacías para mantener la cuadrícula estricta de 4 columnas
+            if (arrayAlbumes.length % 4 !== 0) {
+                let faltantes = 4 - (arrayAlbumes.length % 4);
+                for (let j = 0; j < faltantes; j++) {
+                    tr.appendChild(document.createElement('td'));
+                }
+            }
         }
-        window.abrirModal = (tipo, i) => {
-            document.getElementById('visor-modal').style.display = 'flex';
-            const url = (tipo === 'imagen' ? portafolio.fotos : portafolio.videos)[i];
-            document.getElementById('contenido-modal').innerHTML = tipo==='imagen'?`<img src="${url}">`:`<video src="${url}" controls autoplay></video>`;
-        };
-        window.cerrarModal = () => document.getElementById('visor-modal').style.display = 'none';
+
+        function renderizarSeccionVideos(arrayVideos, idTabla) {
+            const tabla = document.getElementById(idTabla);
+            tabla.innerHTML = ''; 
+            let tr = null;
+
+            for (let i = 0; i < arrayVideos.length; i++) {
+                if (i % 4 === 0) {
+                    tr = document.createElement('tr');
+                    tabla.appendChild(tr);
+                }
+                const td = document.createElement('td');
+                const video = arrayVideos[i];
+
+                let contenidoHtml = `
+                    <div class="item" onclick="abrirVideo(${i})">
+                        <video src="${video.url}" muted loop></video>
+                        <div class="play-icon">▶</div>
+                        <div class="item-label">${video.nombre}</div>
+                    </div>`;
+                
+                td.innerHTML = contenidoHtml;
+                tr.appendChild(td);
+            }
+
+            if (arrayVideos.length % 4 !== 0) {
+                let faltantes = 4 - (arrayVideos.length % 4);
+                for (let j = 0; j < faltantes; j++) {
+                    tr.appendChild(document.createElement('td'));
+                }
+            }
+        }
+
+        // Lógica del Modal y Carrusel
+        const modal = document.getElementById('visor-modal');
+        const contenidoModal = document.getElementById('contenido-modal');
+        const tituloAlbum = document.getElementById('titulo-album');
+        
+        let indiceActual = 0;
+        let arrayActualModal = [];
+        let tituloActualModal = '';
+        let tipoModalActual = '';
+
+        window.abrirAlbumFotos = function(indexAlbum) {
+            tipoModalActual = 'foto';
+            const albumSeleccionado = albumesFotos[indexAlbum];
+            arrayActualModal = albumSeleccionado.fotos;
+            tituloActualModal = albumSeleccionado.nombre;
+            indiceActual = 0;
+
+            modal.style.display = 'flex';
+            mostrarItemActual();
+        }
+
+        window.abrirVideo = function(indexVideo) {
+            tipoModalActual = 'video';
+            const videoSeleccionado = listaVideos[indexVideo];
+            arrayActualModal = [videoSeleccionado.url];
+            tituloActualModal = videoSeleccionado.nombre;
+            indiceActual = 0;
+
+            modal.style.display = 'flex';
+            mostrarItemActual();
+        }
+
+        function mostrarItemActual() {
+            contenidoModal.style.opacity = 0;
+            
+            setTimeout(() => {
+                contenidoModal.innerHTML = '';
+                const urlActual = arrayActualModal[indiceActual];
+
+                // Si es un álbum de varias fotos, mostramos el contador (ej: "Nombre del álbum (1/5)")
+                if (tipoModalActual === 'foto' && arrayActualModal.length > 1) {
+                    tituloAlbum.innerText = `${tituloActualModal} (${indiceActual + 1} / ${arrayActualModal.length})`;
+                } else {
+                    tituloAlbum.innerText = tituloActualModal;
+                }
+
+                if (tipoModalActual === 'foto') {
+                    const img = document.createElement('img');
+                    img.src = urlActual;
+                    contenidoModal.appendChild(img);
+                } else {
+                    const video = document.createElement('video');
+                    video.src = urlActual;
+                    video.controls = true;
+                    video.autoplay = true;
+                    contenidoModal.appendChild(video);
+                }
+                
+                contenidoModal.style.opacity = 1;
+            }, 150);
+        }
+
+        window.navegar = function(direccion) {
+            if (arrayActualModal.length <= 1) return; // Si solo hay una foto, no navega
+            indiceActual += direccion;
+            if (indiceActual >= arrayActualModal.length) indiceActual = 0;
+            if (indiceActual < 0) indiceActual = arrayActualModal.length - 1;
+            mostrarItemActual();
+        }
+
+        window.cerrarModal = function() {
+            modal.style.display = 'none';
+            contenidoModal.innerHTML = ''; 
+        }
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal || e.target === tituloAlbum) cerrarModal();
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (modal.style.display === 'flex') {
+                if (event.key === "Escape") cerrarModal();
+                if (event.key === "ArrowRight") navegar(1);
+                if (event.key === "ArrowLeft") navegar(-1);
+            }
+        });
+
+        // Gestos táctiles (Swipe) para dispositivos móviles
+        let touchstartX = 0;
+        let touchendX = 0;
+
+        contenidoModal.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        contenidoModal.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            manejarSwipe();
+        }, { passive: true });
+
+        function manejarSwipe() {
+            if (touchendX < touchstartX - 50) navegar(1);  // Deslizar izquierda -> Siguiente
+            if (touchendX > touchstartX + 50) navegar(-1); // Deslizar derecha -> Anterior
+        }
     </script>
 </body>
 </html>
