@@ -82,10 +82,16 @@
                 <input type="text" id="nombre" placeholder="Ej: Sesión Verano 2026">
             </div>
 
-            <!-- CONTENEDOR SI ES VIDEO (URL Simple) -->
-            <div class="grupo-input" id="grupo-video" style="display: none;">
-                <label for="url-video">URL del Video:</label>
-                <input type="text" id="url-video" placeholder="https://ejemplo.com/video.mp4">
+            <!-- CONTENEDOR SI ES VIDEO (URL Simple y Portada Opcional) -->
+            <div id="grupo-video" style="display: none;">
+                <div class="grupo-input">
+                    <label for="url-video">URL del Video:</label>
+                    <input type="text" id="url-video" placeholder="https://ejemplo.com/video.mp4">
+                </div>
+                <div class="grupo-input">
+                    <label for="url-portada-video">URL de la Imagen de Portada (Opcional):</label>
+                    <input type="text" id="url-portada-video" placeholder="https://ejemplo.com/miniatura.jpg">
+                </div>
             </div>
 
             <!-- CONTENEDOR SI ES FOTO (Gestión mediante Cuadrícula Modal) -->
@@ -103,7 +109,14 @@
 
         <!-- TABLA DE GESTIÓN -->
         <div class="panel">
-            <h2 style="margin-top: 0;">Registros en la Base de Datos</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
+                <h2 style="margin: 0;">Registros en la Base de Datos</h2>
+                <!-- Buscador rápido -->
+                <div style="width: 280px;">
+                    <input type="text" id="buscador-admin" placeholder="Buscar por nombre..." onkeyup="filtrarRegistros()" style="padding: 8px 12px; font-size: 0.9rem;">
+                </div>
+            </div>
+            
             <div style="overflow-x: auto;">
                 <table class="tabla-gestion">
                     <thead>
@@ -147,7 +160,8 @@
         const db = getFirestore(initializeApp(firebaseConfig));
 
         let editandoId = null;
-        let listaFotosTemporal = []; // Almacena temporalmente las URLs de las fotos del álbum en creación/edición
+        let listaFotosTemporal = []; 
+        let registrosGlobales = []; // Almacena los datos para el buscador
 
         // Cambiar interfaz según selección foto/video
         window.cambiarTipoFormulario = function() {
@@ -181,7 +195,6 @@
             const grid = document.getElementById('cuadricula-modal');
             grid.innerHTML = '';
 
-            // 1. Mostrar celdas con fotos existentes
             listaFotosTemporal.forEach((url, index) => {
                 const celda = document.createElement('div');
                 celda.className = 'celda-grid';
@@ -192,7 +205,6 @@
                 grid.appendChild(celda);
             });
 
-            // 2. Celda final con el signo "+"
             const celdaMas = document.createElement('div');
             celdaMas.className = 'celda-grid celda-agregar';
             celdaMas.onclick = pedirNuevaUrlFoto;
@@ -205,7 +217,6 @@
             grid.appendChild(celdaMas);
         }
 
-        // Solicitar nueva URL mediante un prompt limpio
         window.pedirNuevaUrlFoto = function() {
             const nuevaUrl = prompt("Pega la URL de la nueva fotografía:");
             if(nuevaUrl && nuevaUrl.trim() !== "") {
@@ -214,7 +225,6 @@
             }
         }
 
-        // Eliminar una foto de la lista temporal
         window.eliminarFotoTemporal = function(index) {
             if(confirm("¿Deseas eliminar esta foto del álbum?")) {
                 listaFotosTemporal.splice(index, 1);
@@ -224,49 +234,68 @@
 
         // Cargar registros en tiempo real en la tabla principal
         onSnapshot(collection(db, "multimedia"), (snapshot) => {
+            registrosGlobales = [];
+            snapshot.forEach((docSnap) => {
+                registrosGlobales.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            renderizarTablaAdmin(registrosGlobales);
+        });
+
+        function renderizarTablaAdmin(datos) {
             const tbody = document.getElementById('lista-admin');
             tbody.innerHTML = '';
             
-            if(snapshot.empty) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">No hay contenido registrado.</td></tr>`;
+            if(datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">No se encontraron registros.</td></tr>`;
                 return;
             }
 
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const id = docSnap.id;
+            datos.forEach((item) => {
                 const tr = document.createElement('tr');
-                
                 let previewHtml = '';
                 let detalleTexto = '';
 
-                if(data.tipo === 'foto') {
-                    const primeraFoto = Array.isArray(data.url) ? data.url[0] : data.url;
-                    const cantidad = Array.isArray(data.url) ? data.url.length : 1;
+                if(item.tipo === 'foto') {
+                    const primeraFoto = Array.isArray(item.url) ? item.url[0] : item.url;
+                    const cantidad = Array.isArray(item.url) ? item.url.length : 1;
                     previewHtml = `<img src="${primeraFoto}" class="miniatura" onerror="this.src='https://via.placeholder.com/50?text=Foto'">`;
                     detalleTexto = `Álbum con ${cantidad} fotografía(s)`;
                 } else {
-                    previewHtml = `<video src="${data.url}" class="miniatura" muted></video>`;
-                    detalleTexto = data.url;
+                    const miniaturaVideo = item.portada || 'https://via.placeholder.com/50?text=Video';
+                    previewHtml = `<img src="${miniaturaVideo}" class="miniatura" onerror="this.src='https://via.placeholder.com/50?text=Video'">`;
+                    detalleTexto = item.url;
                 }
+
+                // Codificar de forma segura los datos para el botón de editar
+                const urlSegura = encodeURIComponent(JSON.stringify(item.url));
+                const portadaSegura = encodeURIComponent(item.portada || '');
 
                 tr.innerHTML = `
                     <td>${previewHtml}</td>
-                    <td style="text-transform: capitalize;">${data.tipo}</td>
-                    <td><b>${data.nombre || 'Sin nombre'}</b></td>
+                    <td style="text-transform: capitalize;">${item.tipo}</td>
+                    <td><b>${item.nombre || 'Sin nombre'}</b></td>
                     <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa;" title="${detalleTexto}">${detalleTexto}</td>
                     <td>
                         <div class="acciones-td">
-                            <button class="btn btn-warning" onclick="prepararEdicion('${id}', '${data.tipo}', '${escapeHtml(data.nombre || '')}', '${encodeURIComponent(JSON.stringify(data.url))}')">Editar</button>
-                            <button class="btn btn-danger" onclick="eliminarItem('${id}')">Eliminar</button>
+                            <button class="btn btn-warning" onclick="prepararEdicion('${item.id}', '${item.tipo}', '${escapeHtml(item.nombre || '')}', '${urlSegura}', '${portadaSegura}')">Editar</button>
+                            <button class="btn btn-danger" onclick="eliminarItem('${item.id}')">Eliminar</button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-        });
+        }
 
-        // Función auxiliar para evitar errores con comillas en nombres
+        // Función del buscador rápido en tiempo real
+        window.filtrarRegistros = function() {
+            const textoBusqueda = document.getElementById('buscador-admin').value.toLowerCase().trim();
+            const filtrados = registrosGlobales.filter(item => {
+                const nombre = (item.nombre || '').toLowerCase();
+                return nombre.includes(textoBusqueda);
+            });
+            renderizarTablaAdmin(filtrados);
+        }
+
         function escapeHtml(text) {
             return text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         }
@@ -279,45 +308,48 @@
             const editId = document.getElementById('edit-id').value;
 
             let datosAGuardar = "";
+            let portadaVideo = "";
+
             if(tipo === 'foto') {
                 if(listaFotosTemporal.length === 0) {
                     msg.style.color = "#ff4444";
                     msg.innerText = "Debes agregar al menos una foto al álbum.";
                     return;
                 }
-                datosAGuardar = listaFotosTemporal; // Guardamos el array de fotos
+                datosAGuardar = listaFotosTemporal;
             } else {
                 const urlVideo = document.getElementById('url-video').value.trim();
+                portadaVideo = document.getElementById('url-portada-video').value.trim();
                 if(!urlVideo) {
                     msg.style.color = "#ff4444";
                     msg.innerText = "Por favor ingresa la URL del video.";
                     return;
                 }
-                datosAGuardar = urlVideo; // Video individual
+                datosAGuardar = urlVideo;
             }
 
             try {
                 msg.style.color = "#aaa";
                 msg.innerText = "Guardando...";
 
+                const objetoDatos = {
+                    tipo: tipo,
+                    nombre: nombre || "Sin título",
+                    url: datosAGuardar
+                };
+
+                if(tipo === 'video') {
+                    objetoDatos.portada = portadaVideo; // Se guarda la portada opcional si existe
+                }
+
                 if(editId) {
-                    // Actualizar registro existente
-                    await updateDoc(doc(db, "multimedia", editId), {
-                        tipo: tipo,
-                        nombre: nombre || "Sin título",
-                        url: datosAGuardar
-                    });
+                    await updateDoc(doc(db, "multimedia", editId), objetoDatos);
                     msg.style.color = "#4CAF50";
                     msg.innerText = "¡Contenido actualizado con éxito!";
                     limpiarFormulario();
                 } else {
-                    // Crear nuevo registro
-                    await addDoc(collection(db, "multimedia"), {
-                        tipo: tipo,
-                        nombre: nombre || "Sin título",
-                        url: datosAGuardar,
-                        fecha: new Date()
-                    });
+                    objetoDatos.fecha = new Date();
+                    await addDoc(collection(db, "multimedia"), objetoDatos);
                     msg.style.color = "#4CAF50";
                     msg.innerText = "¡Contenido publicado correctamente!";
                     limpiarFormulario();
@@ -332,7 +364,7 @@
         }
 
         // Cargar datos en el formulario para Editar
-        window.prepararEdicion = function(id, tipo, nombre, urlEncoded) {
+        window.prepararEdicion = function(id, tipo, nombre, urlEncoded, portadaEncoded) {
             document.getElementById('edit-id').value = id;
             document.getElementById('tipo').value = tipo;
             document.getElementById('nombre').value = nombre === 'Sin título' ? '' : nombre;
@@ -340,12 +372,14 @@
             cambiarTipoFormulario();
 
             let urlDecodificada = JSON.parse(decodeURIComponent(urlEncoded));
+            let portadaDecodificada = decodeURIComponent(portadaEncoded);
 
             if(tipo === 'foto') {
                 listaFotosTemporal = Array.isArray(urlDecodificada) ? urlDecodificada : [urlDecodificada];
                 actualizarContadorBotonFotos();
             } else {
                 document.getElementById('url-video').value = urlDecodificada;
+                document.getElementById('url-portada-video').value = portadaDecodificada !== 'null' ? portadaDecodificada : '';
             }
             
             document.getElementById('titulo-form').innerText = "Editar Contenido";
@@ -354,12 +388,12 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Limpiar formulario y salir de modo edición
         window.limpiarFormulario = function() {
             document.getElementById('edit-id').value = '';
             document.getElementById('tipo').value = 'foto';
             document.getElementById('nombre').value = '';
             document.getElementById('url-video').value = '';
+            document.getElementById('url-portada-video').value = '';
             listaFotosTemporal = [];
             actualizarContadorBotonFotos();
             
@@ -370,7 +404,6 @@
             cambiarTipoFormulario();
         }
 
-        // Eliminar elemento de la base de datos
         window.eliminarItem = async function(id) {
             if(confirm("¿Estás seguro de que deseas eliminar este registro por completo?")) {
                 try {
