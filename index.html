@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Portafolio | Álbum Interactivo</title>
+    <!-- HLS.js para soportar reproducción de archivos m3u8 en navegadores compatibles -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #121212; color: #ffffff; }
-        h1, h2 { text-align: center; font-weight: 300; }
-        header { padding: 3rem 1rem; background-color: #1e1e1e; border-bottom: 2px solid #333; }
+        h2 { text-align: center; font-weight: 300; }
         section { padding: 2rem 5%; }
         
         .galeria-tabla { width: 100%; border-collapse: separate; border-spacing: 15px; table-layout: fixed; margin-top: 1.5rem; }
@@ -38,12 +39,7 @@
 </head>
 <body>
 
-    <header>
-        <h1>Mi Portafolio Visual</h1>
-        <p style="text-align: center; color: #aaa;">Explora mi trabajo en fotografía y videografía</p>
-    </header>
-
-    <section id="fotos">
+    <section id="fotos" style="padding-top: 3rem;">
         <h2>Álbumes de Fotografías</h2>
         <table class="galeria-tabla" id="tabla-fotos"></table>
     </section>
@@ -69,8 +65,8 @@
         const firebaseConfig = { apiKey: "AIzaSyCd5evRX5lv8ulopShw0gJ_iCpnaMQxays", authDomain: "chica-americana.firebaseapp.com", projectId: "chica-americana", storageBucket: "chica-americana.firebasestorage.app", messagingSenderId: "20615894861", appId: "1:20615894861:web:67895bcdec88371e318904" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        let albumesFotos = []; // Lista de álbumes de fotos
-        let listaVideos = [];  // Lista de videos
+        let albumesFotos = []; 
+        let listaVideos = [];  
 
         // Escuchar datos de Firebase en tiempo real
         onSnapshot(collection(db, "multimedia"), (snapshot) => {
@@ -92,8 +88,8 @@
                     if (urlsArray.length > 0) {
                         albumesFotos.push({
                             nombre: nombreItem,
-                            portada: urlsArray[0], // Primera foto como miniatura principal en el home
-                            fotos: urlsArray       // Todas las fotos que pertenecen a este álbum
+                            portada: urlsArray[0], 
+                            fotos: urlsArray       
                         });
                     }
                 } else if (data.tipo === 'video') {
@@ -128,14 +124,13 @@
                 let contenidoHtml = `
                     <div class="item" onclick="abrirAlbumFotos(${i})">
                         <img src="${album.portada}" alt="${album.nombre}">
-                        <div class="item-label">📁 ${album.nombre} (${album.fotos.length})</div>
+                        <div class="item-label">${album.nombre}</div>
                     </div>`;
                 
                 td.innerHTML = contenidoHtml;
                 tr.appendChild(td);
             }
 
-            // Rellenar celdas vacías para mantener la cuadrícula estricta de 4 columnas
             if (arrayAlbumes.length % 4 !== 0) {
                 let faltantes = 4 - (arrayAlbumes.length % 4);
                 for (let j = 0; j < faltantes; j++) {
@@ -185,6 +180,7 @@
         let arrayActualModal = [];
         let tituloActualModal = '';
         let tipoModalActual = '';
+        let hlsInstance = null; // Instancia global para HLS
 
         window.abrirAlbumFotos = function(indexAlbum) {
             tipoModalActual = 'foto';
@@ -209,13 +205,18 @@
         }
 
         function mostrarItemActual() {
+            // Destruir instancia anterior de HLS si existía
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
+
             contenidoModal.style.opacity = 0;
             
             setTimeout(() => {
                 contenidoModal.innerHTML = '';
                 const urlActual = arrayActualModal[indiceActual];
 
-                // Si es un álbum de varias fotos, mostramos el contador (ej: "Nombre del álbum (1/5)")
                 if (tipoModalActual === 'foto' && arrayActualModal.length > 1) {
                     tituloAlbum.innerText = `${tituloActualModal} (${indiceActual + 1} / ${arrayActualModal.length})`;
                 } else {
@@ -228,9 +229,23 @@
                     contenidoModal.appendChild(img);
                 } else {
                     const video = document.createElement('video');
-                    video.src = urlActual;
                     video.controls = true;
                     video.autoplay = true;
+
+                    // Soporte para archivos .m3u8 (HLS)
+                    if (urlActual.includes('.m3u8')) {
+                        if (Hls.isSupported()) {
+                            hlsInstance = new Hls();
+                            hlsInstance.loadSource(urlActual);
+                            hlsInstance.attachMedia(video);
+                        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                            // Soporte nativo en Safari / iOS
+                            video.src = urlActual;
+                        }
+                    } else {
+                        video.src = urlActual;
+                    }
+
                     contenidoModal.appendChild(video);
                 }
                 
@@ -239,7 +254,7 @@
         }
 
         window.navegar = function(direccion) {
-            if (arrayActualModal.length <= 1) return; // Si solo hay una foto, no navega
+            if (arrayActualModal.length <= 1) return; 
             indiceActual += direccion;
             if (indiceActual >= arrayActualModal.length) indiceActual = 0;
             if (indiceActual < 0) indiceActual = arrayActualModal.length - 1;
@@ -247,6 +262,10 @@
         }
 
         window.cerrarModal = function() {
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
             modal.style.display = 'none';
             contenidoModal.innerHTML = ''; 
         }
@@ -263,7 +282,7 @@
             }
         });
 
-        // Gestos táctiles (Swipe) para dispositivos móviles
+        // Gestos táctiles (Swipe)
         let touchstartX = 0;
         let touchendX = 0;
 
@@ -277,8 +296,8 @@
         }, { passive: true });
 
         function manejarSwipe() {
-            if (touchendX < touchstartX - 50) navegar(1);  // Deslizar izquierda -> Siguiente
-            if (touchendX > touchstartX + 50) navegar(-1); // Deslizar derecha -> Anterior
+            if (touchendX < touchstartX - 50) navegar(1);  
+            if (touchendX > touchstartX + 50) navegar(-1); 
         }
     </script>
 </body>
