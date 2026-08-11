@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración | Chica Americana</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 2rem; background-color: #121212; color: #ffffff; }
+        h1, h2 { text-align: center; font-weight: 300; }
+        
+        .contenedor-admin { max-width: 900px; margin: 0 auto; }
+        
+        .panel { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 2rem; }
+        .grupo-input { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #555; background-color: #121212; color: white; box-sizing: border-box; font-size: 1rem; }
+        textarea { resize: vertical; height: 80px; }
+        
+        .btn { padding: 12px 20px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
+        .btn:hover { background-color: #0b7dda; }
+        .btn-danger { background-color: #f44336; }
+        .btn-danger:hover { background-color: #d32f2f; }
+        .btn-warning { background-color: #ff9800; color: black; }
+        .btn-warning:hover { background-color: #e68900; }
+        
+        #msg { text-align: center; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+
+        /* Tabla de administración */
+        .tabla-gestion { width: 100%; border-collapse: collapse; margin-top: 1rem; background: #1e1e1e; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
+        .tabla-gestion th, .tabla-gestion td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
+        .tabla-gestion th { background-color: #2a2a2a; color: #ddd; font-weight: 600; }
+        .tabla-gestion tr:hover { background-color: #252525; }
+        .miniatura { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: #000; }
+        .acciones-td { display: flex; gap: 8px; }
+        .acciones-td button { padding: 6px 10px; font-size: 0.85rem; width: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-admin">
+        <h1>Panel de Administración</h1>
+        <p style="text-align: center; color: #aaa; margin-bottom: 2rem;">Gestiona, agrega, edita o elimina contenido de tu portafolio</p>
+
+        <!-- FORMULARIO DE CREACIÓN / EDICIÓN -->
+        <div class="panel">
+            <h2 id="titulo-form" style="margin-top: 0;">Agregar Nuevo Contenido</h2>
+            <input type="hidden" id="edit-id">
+            
+            <div class="grupo-input">
+                <label for="tipo">Tipo de contenido:</label>
+                <select id="tipo" onchange="cambiarTipoInput()">
+                    <option value="foto">Fotografía(s)</option>
+                    <option value="video">Video</option>
+                </select>
+            </div>
+
+            <div class="grupo-input">
+                <label for="nombre">Nombre o Título del archivo / álbum:</label>
+                <input type="text" id="nombre" placeholder="Ej: Sesión en la playa o Video promocional">
+            </div>
+
+            <div class="grupo-input" id="contenedor-url">
+                <label for="url" id="label-url">URL de la foto:</label>
+                <textarea id="url" placeholder="Pega aquí la URL. Si seleccionas varias fotos, sepáralas con saltos de línea (una por renglón)."></textarea>
+                <small id="ayuda-multiples" style="color: #888; display: block; margin-top: 4px;">💡 Puedes pegar múltiples URLs de imágenes (una debajo de otra) para agregarlas como un álbum de golpe.</small>
+            </div>
+
+            <button class="btn" id="btn-accion" onclick="guardarContenido()">Publicar en el Portafolio</button>
+            <button class="btn btn-warning" id="btn-cancelar" onclick="limpiarFormulario()" style="display:none; margin-top: 8px;">Cancelar Edición</button>
+            <p id="msg"></p>
+        </div>
+
+        <!-- TABLA DE GESTIÓN -->
+        <div class="panel">
+            <h2 style="margin-top: 0;">Archivos en la Base de Datos</h2>
+            <div style="overflow-x: auto;">
+                <table class="tabla-gestion">
+                    <thead>
+                        <tr>
+                            <th>Vista previa</th>
+                            <th>Tipo</th>
+                            <th>Nombre</th>
+                            <th>URL / Enlace</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-admin">
+                        <!-- Se llena con JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCd5evRX5lv8ulopShw0gJ_iCpnaMQxays", authDomain: "chica-americana.firebaseapp.com", projectId: "chica-americana", storageBucket: "chica-americana.firebasestorage.app", messagingSenderId: "20615894861", appId: "1:20615894861:web:67895bcdec88371e318904" };
+        const db = getFirestore(initializeApp(firebaseConfig));
+
+        let editandoId = null;
+
+        // Cambiar texto de ayuda según si es foto o video
+        window.cambiarTipoInput = function() {
+            const tipo = document.getElementById('tipo').value;
+            const label = document.getElementById('label-url');
+            const ayuda = document.getElementById('ayuda-multiples');
+            if(tipo === 'foto') {
+                label.innerText = "URL(s) de la(s) foto(s):";
+                ayuda.style.display = 'block';
+            } else {
+                label.innerText = "URL del video:";
+                ayuda.style.display = 'none';
+            }
+        }
+
+        // Cargar y escuchar cambios en tiempo real para la tabla de administración
+        onSnapshot(collection(db, "multimedia"), (snapshot) => {
+            const tbody = document.getElementById('lista-admin');
+            tbody.innerHTML = '';
+            
+            if(snapshot.empty) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">No hay contenido registrado.</td></tr>`;
+                return;
+            }
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                const tr = document.createElement('tr');
+                
+                let previewHtml = data.tipo === 'foto' 
+                    ? `<img src="${data.url}" class="miniatura" onerror="this.src='https://via.placeholder.com/50?text=Error'">`
+                    : `<video src="${data.url}" class="miniatura" muted></video>`;
+
+                tr.innerHTML = `
+                    <td>${previewHtml}</td>
+                    <td style="text-transform: capitalize;">${data.tipo}</td>
+                    <td><b>${data.nombre || 'Sin nombre'}</b></td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa;" title="${data.url}">${data.url}</td>
+                    <td>
+                        <div class="acciones-td">
+                            <button class="btn btn-warning" onclick="prepararEdicion('${id}', '${data.tipo}', '${data.nombre || ''}', '${data.url}')">Editar</button>
+                            <button class="btn btn-danger" onclick="eliminarItem('${id}')">Eliminar</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+
+        // Guardar o Actualizar contenido
+        window.guardarContenido = async function() {
+            const tipo = document.getElementById('tipo').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            const urlsTexto = document.getElementById('url').value.trim();
+            const msg = document.getElementById('msg');
+            const editId = document.getElementById('edit-id').value;
+
+            if(!urlsTexto) {
+                msg.style.color = "#ff4444";
+                msg.msg.innerText = "Por favor ingresa al menos una URL.";
+                return;
+            }
+
+            try {
+                msg.style.color = "#aaa";
+                msg.innerText = "Procesando...";
+
+                if(editId) {
+                    // Modo Edición (Solo un registro a la vez)
+                    await updateDoc(doc(db, "multimedia", editId), {
+                        tipo: tipo,
+                        nombre: nombre,
+                        url: urlsTexto.split('\n')[0].trim() // Toma la primera línea si editaron por error con varias
+                    });
+                    msg.style.color = "#4CAF50";
+                    msg.innerText = "¡Contenido actualizado con éxito!";
+                    limpiarFormulario();
+                } else {
+                    // Modo Creación (Soporta múltiples líneas si es foto)
+                    const lineas = urlsTexto.split('\n');
+                    let cantidadAgregada = 0;
+
+                    for(let linea of lineas) {
+                        const urlLimpia = linea.trim();
+                        if(urlLimpia) {
+                            await addDoc(collection(db, "multimedia"), {
+                                tipo: tipo,
+                                nombre: nombre || "Álbum / Sin nombre",
+                                url: urlLimpia,
+                                fecha: new Date()
+                            });
+                            cantidadAgregada++;
+                            // Si es video, por lógica general solo se sube de a uno, rompemos el ciclo para evitar duplicar el mismo video por error si pegan varias líneas iguales.
+                            if(tipo === 'video') break; 
+                        }
+                    }
+
+                    msg.style.color = "#4CAF50";
+                    msg.innerText = `¡Se agregaron ${cantidadAgregada} elemento(s) correctamente!`;
+                    document.getElementById('url').value = '';
+                    document.getElementById('nombre').value = '';
+                }
+
+                setTimeout(() => { msg.innerText = ""; }, 3000);
+            } catch(e) {
+                console.error(e);
+                msg.style.color = "#ff4444";
+                msg.innerText = "Error al guardar en la base de datos.";
+            }
+        }
+
+        // Cargar datos en el formulario para editar
+        window.prepararEdicion = function(id, tipo, nombre, url) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('tipo').value = tipo;
+            document.getElementById('nombre').value = nombre === 'Sin nombre' ? '' : nombre;
+            document.getElementById('url').value = url;
+            
+            document.getElementById('titulo-form').innerText = "Editar Contenido";
+            document.getElementById('btn-accion').innerText = "Guardar Cambios";
+            document.getElementById('btn-cancelar').style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            cambiarTipoInput();
+        }
+
+        // Limpiar formulario y salir de modo edición
+        window.limpiarFormulario = function() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('tipo').value = 'foto';
+            document.getElementById('nombre').value = '';
+            document.getElementById('url').value = '';
+            
+            document.getElementById('titulo-form').innerText = "Agregar Nuevo Contenido";
+            document.getElementById('btn-accion').innerText = "Publicar en el Portafolio";
+            document.getElementById('btn-cancelar').style.display = "none";
+            document.getElementById('msg').innerText = '';
+            cambiarTipoInput();
+        }
+
+        // Eliminar elemento
+        window.eliminarItem = async function(id) {
+            if(confirm("¿Estás seguro de que deseas eliminar este elemento del portafolio?")) {
+                try {
+                    await deleteDoc(doc(db, "multimedia", id));
+                } catch(e) {
+                    console.error("Error al eliminar: ", e);
+                    alert("No se pudo eliminar el elemento.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
