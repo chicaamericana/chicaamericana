@@ -9,12 +9,10 @@
         h1, h2 { text-align: center; font-weight: 300; }
         
         .contenedor-admin { max-width: 900px; margin: 0 auto; }
-        
         .panel { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 2rem; }
         .grupo-input { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9rem; }
-        input, select, textarea { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #555; background-color: #121212; color: white; box-sizing: border-box; font-size: 1rem; }
-        textarea { resize: vertical; height: 80px; }
+        input, select { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #555; background-color: #121212; color: white; box-sizing: border-box; font-size: 1rem; }
         
         .btn { padding: 12px 20px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
         .btn:hover { background-color: #0b7dda; }
@@ -25,6 +23,10 @@
         
         #msg { text-align: center; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
 
+        /* Estilo para botón de abrir selector modal de fotos */
+        .btn-selector-fotos { background-color: #333; border: 1px dashed #777; padding: 15px; text-align: center; border-radius: 6px; cursor: pointer; color: #ccc; margin-top: 5px; transition: 0.2s; }
+        .btn-selector-fotos:hover { background-color: #3a3a3a; color: #fff; border-color: #2196F3; }
+
         /* Tabla de administración */
         .tabla-gestion { width: 100%; border-collapse: collapse; margin-top: 1rem; background: #1e1e1e; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
         .tabla-gestion th, .tabla-gestion td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
@@ -33,13 +35,34 @@
         .miniatura { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: #000; }
         .acciones-td { display: flex; gap: 8px; }
         .acciones-td button { padding: 6px 10px; font-size: 0.85rem; width: auto; }
+
+        /* VENTANA MODAL / CUADRÍCULA DE 4 COLUMNAS PARA FOTOS */
+        #modal-fotos { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(10px); justify-content: center; align-items: center; }
+        .modal-contenido { background: #1e1e1e; width: 85%; max-width: 700px; max-height: 80vh; border-radius: 10px; border: 1px solid #444; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+        .modal-header { padding: 15px 20px; background: #2a2a2a; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .modal-header h3 { margin: 0; font-size: 1.2rem; }
+        .cerrar-modal-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 20px; overflow-y: auto; flex-grow: 1; }
+
+        /* Cuadrícula estricta de 4 columnas */
+        .cuadricula-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .celda-grid { aspect-ratio: 1/1; background: #121212; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
+        .celda-grid img { width: 100%; height: 100%; object-fit: cover; }
+        .celda-grid button.borrar-foto-grid { position: absolute; top: 5px; right: 5px; background: rgba(244,67,54,0.8); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .celda-grid button.borrar-foto-grid:hover { background: #f44336; }
+        
+        /* Celda de agregar con el signo más */
+        .celda-agregar { background: #222; border: 2px dashed #555; cursor: pointer; flex-direction: column; transition: 0.2s; }
+        .celda-agregar:hover { border-color: #2196F3; background: #2a2a2a; }
+        .simbolo-mas { font-size: 2.5rem; color: #aaa; font-weight: 300; line-height: 1; }
+        .texto-mas { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <div class="contenedor-admin">
         <h1>Panel de Administración</h1>
-        <p style="text-align: center; color: #aaa; margin-bottom: 2rem;">Gestiona, agrega, edita o elimina contenido de tu portafolio</p>
+        <p style="text-align: center; color: #aaa; margin-bottom: 2rem;">Gestiona tu contenido, álbumes y videos por archivo individual</p>
 
         <!-- FORMULARIO DE CREACIÓN / EDICIÓN -->
         <div class="panel">
@@ -48,21 +71,29 @@
             
             <div class="grupo-input">
                 <label for="tipo">Tipo de contenido:</label>
-                <select id="tipo" onchange="cambiarTipoInput()">
-                    <option value="foto">Fotografía(s)</option>
-                    <option value="video">Video</option>
+                <select id="tipo" onchange="cambiarTipoFormulario()">
+                    <option value="foto">Álbum de Fotografías (Múltiples fotos)</option>
+                    <option value="video">Video (Archivo Individual)</option>
                 </select>
             </div>
 
             <div class="grupo-input">
-                <label for="nombre">Nombre o Título del archivo / álbum:</label>
-                <input type="text" id="nombre" placeholder="Ej: Sesión en la playa o Video promocional">
+                <label for="nombre">Nombre del Álbum o Video:</label>
+                <input type="text" id="nombre" placeholder="Ej: Sesión Verano 2026">
             </div>
 
-            <div class="grupo-input" id="contenedor-url">
-                <label for="url" id="label-url">URL de la foto:</label>
-                <textarea id="url" placeholder="Pega aquí la URL. Si seleccionas varias fotos, sepáralas con saltos de línea (una por renglón)."></textarea>
-                <small id="ayuda-multiples" style="color: #888; display: block; margin-top: 4px;">💡 Puedes pegar múltiples URLs de imágenes (una debajo de otra) para agregarlas como un álbum de golpe.</small>
+            <!-- CONTENEDOR SI ES VIDEO (URL Simple) -->
+            <div class="grupo-input" id="grupo-video" style="display: none;">
+                <label for="url-video">URL del Video:</label>
+                <input type="text" id="url-video" placeholder="https://ejemplo.com/video.mp4">
+            </div>
+
+            <!-- CONTENEDOR SI ES FOTO (Gestión mediante Cuadrícula Modal) -->
+            <div class="grupo-input" id="grupo-fotos">
+                <label>Imágenes del Álbum:</label>
+                <div class="btn-selector-fotos" onclick="abrirModalFotos()">
+                    📷 <span id="contador-fotos-btn">0 fotos agregadas</span> (Haz clic para configurar)
+                </div>
             </div>
 
             <button class="btn" id="btn-accion" onclick="guardarContenido()">Publicar en el Portafolio</button>
@@ -72,7 +103,7 @@
 
         <!-- TABLA DE GESTIÓN -->
         <div class="panel">
-            <h2 style="margin-top: 0;">Archivos en la Base de Datos</h2>
+            <h2 style="margin-top: 0;">Registros en la Base de Datos</h2>
             <div style="overflow-x: auto;">
                 <table class="tabla-gestion">
                     <thead>
@@ -80,7 +111,7 @@
                             <th>Vista previa</th>
                             <th>Tipo</th>
                             <th>Nombre</th>
-                            <th>URL / Enlace</th>
+                            <th>Detalle / URL</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -88,6 +119,21 @@
                         <!-- Se llena con JS -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA MODAL / CUADRÍCULA DE FOTOS -->
+    <div id="modal-fotos">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3>Gestionar Fotos del Álbum</h3>
+                <button class="cerrar-modal-btn" onclick="cerrarModalFotos()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="cuadricula-4col" id="cuadricula-modal">
+                    <!-- Las fotos agregadas y el botón con el "+" se inyectan aquí -->
+                </div>
             </div>
         </div>
     </div>
@@ -101,22 +147,82 @@
         const db = getFirestore(initializeApp(firebaseConfig));
 
         let editandoId = null;
+        let listaFotosTemporal = []; // Almacena temporalmente las URLs de las fotos del álbum en creación/edición
 
-        // Cambiar texto de ayuda según si es foto o video
-        window.cambiarTipoInput = function() {
+        // Cambiar interfaz según selección foto/video
+        window.cambiarTipoFormulario = function() {
             const tipo = document.getElementById('tipo').value;
-            const label = document.getElementById('label-url');
-            const ayuda = document.getElementById('ayuda-multiples');
             if(tipo === 'foto') {
-                label.innerText = "URL(s) de la(s) foto(s):";
-                ayuda.style.display = 'block';
+                document.getElementById('grupo-video').style.display = 'none';
+                document.getElementById('grupo-fotos').style.display = 'block';
             } else {
-                label.innerText = "URL del video:";
-                ayuda.style.display = 'none';
+                document.getElementById('grupo-video').style.display = 'block';
+                document.getElementById('grupo-fotos').style.display = 'none';
             }
         }
 
-        // Cargar y escuchar cambios en tiempo real para la tabla de administración
+        // Abrir y cerrar Modal de Fotos
+        window.abrirModalFotos = function() {
+            document.getElementById('modal-fotos').style.display = 'flex';
+            renderizarCuadriculaModal();
+        }
+        window.cerrarModalFotos = function() {
+            document.getElementById('modal-fotos').style.display = 'none';
+            actualizarContadorBotonFotos();
+        }
+
+        function actualizarContadorBotonFotos() {
+            const total = listaFotosTemporal.length;
+            document.getElementById('contador-fotos-btn').innerText = total === 1 ? '1 foto agregada' : `${total} fotos agregadas`;
+        }
+
+        // Renderizar la cuadrícula de 4 columnas dentro del modal
+        function renderizarCuadriculaModal() {
+            const grid = document.getElementById('cuadricula-modal');
+            grid.innerHTML = '';
+
+            // 1. Mostrar celdas con fotos existentes
+            listaFotosTemporal.forEach((url, index) => {
+                const celda = document.createElement('div');
+                celda.className = 'celda-grid';
+                celda.innerHTML = `
+                    <img src="${url}" onerror="this.src='https://via.placeholder.com/150?text=Error+URL'">
+                    <button class="borrar-foto-grid" onclick="eliminarFotoTemporal(${index})" title="Eliminar foto">&times;</button>
+                `;
+                grid.appendChild(celda);
+            });
+
+            // 2. Celda final con el signo "+"
+            const celdaMas = document.createElement('div');
+            celdaMas.className = 'celda-grid celda-agregar';
+            celdaMas.onclick = pedirNuevaUrlFoto;
+            celdaMas.innerHTML = `
+                <div style="text-align:center;">
+                    <div class="simbolo-mas">+</div>
+                    <div class="texto-mas">Añadir foto</div>
+                </div>
+            `;
+            grid.appendChild(celdaMas);
+        }
+
+        // Solicitar nueva URL mediante un prompt limpio
+        window.pedirNuevaUrlFoto = function() {
+            const nuevaUrl = prompt("Pega la URL de la nueva fotografía:");
+            if(nuevaUrl && nuevaUrl.trim() !== "") {
+                listaFotosTemporal.push(nuevaUrl.trim());
+                renderizarCuadriculaModal();
+            }
+        }
+
+        // Eliminar una foto de la lista temporal
+        window.eliminarFotoTemporal = function(index) {
+            if(confirm("¿Deseas eliminar esta foto del álbum?")) {
+                listaFotosTemporal.splice(index, 1);
+                renderizarCuadriculaModal();
+            }
+        }
+
+        // Cargar registros en tiempo real en la tabla principal
         onSnapshot(collection(db, "multimedia"), (snapshot) => {
             const tbody = document.getElementById('lista-admin');
             tbody.innerHTML = '';
@@ -131,18 +237,27 @@
                 const id = docSnap.id;
                 const tr = document.createElement('tr');
                 
-                let previewHtml = data.tipo === 'foto' 
-                    ? `<img src="${data.url}" class="miniatura" onerror="this.src='https://via.placeholder.com/50?text=Error'">`
-                    : `<video src="${data.url}" class="miniatura" muted></video>`;
+                let previewHtml = '';
+                let detalleTexto = '';
+
+                if(data.tipo === 'foto') {
+                    const primeraFoto = Array.isArray(data.url) ? data.url[0] : data.url;
+                    const cantidad = Array.isArray(data.url) ? data.url.length : 1;
+                    previewHtml = `<img src="${primeraFoto}" class="miniatura" onerror="this.src='https://via.placeholder.com/50?text=Foto'">`;
+                    detalleTexto = `Álbum con ${cantidad} fotografía(s)`;
+                } else {
+                    previewHtml = `<video src="${data.url}" class="miniatura" muted></video>`;
+                    detalleTexto = data.url;
+                }
 
                 tr.innerHTML = `
                     <td>${previewHtml}</td>
                     <td style="text-transform: capitalize;">${data.tipo}</td>
                     <td><b>${data.nombre || 'Sin nombre'}</b></td>
-                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa;" title="${data.url}">${data.url}</td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa;" title="${detalleTexto}">${detalleTexto}</td>
                     <td>
                         <div class="acciones-td">
-                            <button class="btn btn-warning" onclick="prepararEdicion('${id}', '${data.tipo}', '${data.nombre || ''}', '${data.url}')">Editar</button>
+                            <button class="btn btn-warning" onclick="prepararEdicion('${id}', '${data.tipo}', '${escapeHtml(data.nombre || '')}', '${encodeURIComponent(JSON.stringify(data.url))}')">Editar</button>
                             <button class="btn btn-danger" onclick="eliminarItem('${id}')">Eliminar</button>
                         </div>
                     </td>
@@ -151,58 +266,61 @@
             });
         });
 
-        // Guardar o Actualizar contenido
+        // Función auxiliar para evitar errores con comillas en nombres
+        function escapeHtml(text) {
+            return text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+        }
+
+        // Guardar o Actualizar contenido en Firebase
         window.guardarContenido = async function() {
             const tipo = document.getElementById('tipo').value;
             const nombre = document.getElementById('nombre').value.trim();
-            const urlsTexto = document.getElementById('url').value.trim();
             const msg = document.getElementById('msg');
             const editId = document.getElementById('edit-id').value;
 
-            if(!urlsTexto) {
-                msg.style.color = "#ff4444";
-                msg.msg.innerText = "Por favor ingresa al menos una URL.";
-                return;
+            let datosAGuardar = "";
+            if(tipo === 'foto') {
+                if(listaFotosTemporal.length === 0) {
+                    msg.style.color = "#ff4444";
+                    msg.innerText = "Debes agregar al menos una foto al álbum.";
+                    return;
+                }
+                datosAGuardar = listaFotosTemporal; // Guardamos el array de fotos
+            } else {
+                const urlVideo = document.getElementById('url-video').value.trim();
+                if(!urlVideo) {
+                    msg.style.color = "#ff4444";
+                    msg.innerText = "Por favor ingresa la URL del video.";
+                    return;
+                }
+                datosAGuardar = urlVideo; // Video individual
             }
 
             try {
                 msg.style.color = "#aaa";
-                msg.innerText = "Procesando...";
+                msg.innerText = "Guardando...";
 
                 if(editId) {
-                    // Modo Edición (Solo un registro a la vez)
+                    // Actualizar registro existente
                     await updateDoc(doc(db, "multimedia", editId), {
                         tipo: tipo,
-                        nombre: nombre,
-                        url: urlsTexto.split('\n')[0].trim() // Toma la primera línea si editaron por error con varias
+                        nombre: nombre || "Sin título",
+                        url: datosAGuardar
                     });
                     msg.style.color = "#4CAF50";
                     msg.innerText = "¡Contenido actualizado con éxito!";
                     limpiarFormulario();
                 } else {
-                    // Modo Creación (Soporta múltiples líneas si es foto)
-                    const lineas = urlsTexto.split('\n');
-                    let cantidadAgregada = 0;
-
-                    for(let linea of lineas) {
-                        const urlLimpia = linea.trim();
-                        if(urlLimpia) {
-                            await addDoc(collection(db, "multimedia"), {
-                                tipo: tipo,
-                                nombre: nombre || "Álbum / Sin nombre",
-                                url: urlLimpia,
-                                fecha: new Date()
-                            });
-                            cantidadAgregada++;
-                            // Si es video, por lógica general solo se sube de a uno, rompemos el ciclo para evitar duplicar el mismo video por error si pegan varias líneas iguales.
-                            if(tipo === 'video') break; 
-                        }
-                    }
-
+                    // Crear nuevo registro
+                    await addDoc(collection(db, "multimedia"), {
+                        tipo: tipo,
+                        nombre: nombre || "Sin título",
+                        url: datosAGuardar,
+                        fecha: new Date()
+                    });
                     msg.style.color = "#4CAF50";
-                    msg.innerText = `¡Se agregaron ${cantidadAgregada} elemento(s) correctamente!`;
-                    document.getElementById('url').value = '';
-                    document.getElementById('nombre').value = '';
+                    msg.innerText = "¡Contenido publicado correctamente!";
+                    limpiarFormulario();
                 }
 
                 setTimeout(() => { msg.innerText = ""; }, 3000);
@@ -213,18 +331,27 @@
             }
         }
 
-        // Cargar datos en el formulario para editar
-        window.prepararEdicion = function(id, tipo, nombre, url) {
+        // Cargar datos en el formulario para Editar
+        window.prepararEdicion = function(id, tipo, nombre, urlEncoded) {
             document.getElementById('edit-id').value = id;
             document.getElementById('tipo').value = tipo;
-            document.getElementById('nombre').value = nombre === 'Sin nombre' ? '' : nombre;
-            document.getElementById('url').value = url;
+            document.getElementById('nombre').value = nombre === 'Sin título' ? '' : nombre;
+            
+            cambiarTipoFormulario();
+
+            let urlDecodificada = JSON.parse(decodeURIComponent(urlEncoded));
+
+            if(tipo === 'foto') {
+                listaFotosTemporal = Array.isArray(urlDecodificada) ? urlDecodificada : [urlDecodificada];
+                actualizarContadorBotonFotos();
+            } else {
+                document.getElementById('url-video').value = urlDecodificada;
+            }
             
             document.getElementById('titulo-form').innerText = "Editar Contenido";
             document.getElementById('btn-accion').innerText = "Guardar Cambios";
             document.getElementById('btn-cancelar').style.display = "block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            cambiarTipoInput();
         }
 
         // Limpiar formulario y salir de modo edición
@@ -232,18 +359,20 @@
             document.getElementById('edit-id').value = '';
             document.getElementById('tipo').value = 'foto';
             document.getElementById('nombre').value = '';
-            document.getElementById('url').value = '';
+            document.getElementById('url-video').value = '';
+            listaFotosTemporal = [];
+            actualizarContadorBotonFotos();
             
             document.getElementById('titulo-form').innerText = "Agregar Nuevo Contenido";
             document.getElementById('btn-accion').innerText = "Publicar en el Portafolio";
             document.getElementById('btn-cancelar').style.display = "none";
             document.getElementById('msg').innerText = '';
-            cambiarTipoInput();
+            cambiarTipoFormulario();
         }
 
-        // Eliminar elemento
+        // Eliminar elemento de la base de datos
         window.eliminarItem = async function(id) {
-            if(confirm("¿Estás seguro de que deseas eliminar este elemento del portafolio?")) {
+            if(confirm("¿Estás seguro de que deseas eliminar este registro por completo?")) {
                 try {
                     await deleteDoc(doc(db, "multimedia", id));
                 } catch(e) {
