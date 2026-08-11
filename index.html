@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Portafolio | Álbum Interactivo</title>
-    <!-- HLS.js para soportar reproducción de archivos m3u8 en navegadores compatibles -->
+    <!-- HLS.js para reproducción de archivos m3u8 -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #121212; color: #ffffff; }
@@ -17,16 +17,24 @@
         .item { position: relative; cursor: pointer; overflow: hidden; border-radius: 8px; aspect-ratio: 1 / 1; background-color: #222; width: 100%; }
         .item img, .item video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
         .item:hover img, .item:hover video { transform: scale(1.05); }
-        .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255, 255, 255, 0.8); pointer-events: none; }
+        .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255, 255, 255, 0.8); pointer-events: none; z-index: 2; }
         
-        /* Etiqueta del título del álbum */
-        .item-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.85rem; padding: 8px; box-sizing: border-box; text-align: center; font-weight: 500; }
+        .item-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.85rem; padding: 8px; box-sizing: border-box; text-align: center; font-weight: 500; z-index: 2; }
 
-        /* Visor Modal Carrusel */
         #visor-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); align-items: center; justify-content: center; flex-direction: column; }
-        #titulo-album { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 1.5rem; font-weight: 300; letter-spacing: 2px; margin: 0; z-index: 1002; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        #contenido-modal { max-width: 85%; max-height: 80vh; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
-        #contenido-modal img, #contenido-modal video { max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); user-select: none; }
+        #titulo-album { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 1.5rem; font-weight: 300; letter-spacing: 2px; margin: 0; z-index: 1002; text-shadow: 0 2px 4px rgba(0,0,0,0.8); width: 80%; text-align: center; }
+        
+        #contenedor-modal { display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 85%; max-height: 80vh; transition: opacity 0.3s ease; }
+        #contenido-modal { display: flex; justify-content: center; align-items: center; max-height: 70vh; }
+        #contenido-modal img, #contenido-modal video { max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); user-select: none; }
+
+        /* Contenedor del enlace alternativo visible solo en videos */
+        .enlace-alternativo { display: none; margin-top: 12px; width: 100%; max-width: 500px; text-align: center; }
+        .enlace-alternativo p { font-size: 0.8rem; color: #aaa; margin: 0 0 5px 0; }
+        .input-copiar-grupo { display: flex; gap: 8px; }
+        .input-copiar-grupo input { flex-grow: 1; padding: 8px 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; outline: none; }
+        .input-copiar-grupo button { padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; transition: background 0.2s; }
+        .input-copiar-grupo button:hover { background: #0b7dda; }
 
         .btn-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 3rem; cursor: pointer; z-index: 1002; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 5px; transition: background 0.3s, transform 0.2s; user-select: none; }
         .btn-nav:hover { background: rgba(0,0,0,0.8); transform: translateY(-50%) scale(1.1); }
@@ -54,7 +62,18 @@
         <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
         <div class="btn-nav btn-prev" onclick="navegar(-1)">&#10094;</div>
         <div class="btn-nav btn-next" onclick="navegar(1)">&#10095;</div>
-        <div id="contenido-modal"></div>
+        
+        <div id="contenedor-modal">
+            <div id="contenido-modal"></div>
+            <!-- Cuadro de texto exclusivo para videos cuando están abiertos en el modal -->
+            <div class="enlace-alternativo" id="caja-enlace-video">
+                <p>¿Problemas para visualizar el video? Copia el enlace y ábrelo externamente:</p>
+                <div class="input-copiar-grupo">
+                    <input type="text" id="input-url-video" readonly>
+                    <button onclick="copiarEnlaceVideo()">Copiar enlace</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDKs -->
@@ -68,7 +87,6 @@
         let albumesFotos = []; 
         let listaVideos = [];  
 
-        // Escuchar datos de Firebase en tiempo real
         onSnapshot(collection(db, "multimedia"), (snapshot) => {
             albumesFotos = [];
             listaVideos = [];
@@ -123,7 +141,7 @@
 
                 let contenidoHtml = `
                     <div class="item" onclick="abrirAlbumFotos(${i})">
-                        <img src="${album.portada}" alt="${album.nombre}">
+                        <img src="${album.portada}" alt="${album.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
                         <div class="item-label">${album.nombre}</div>
                     </div>`;
                 
@@ -154,7 +172,10 @@
 
                 let contenidoHtml = `
                     <div class="item" onclick="abrirVideo(${i})">
-                        <video src="${video.url}" muted loop></video>
+                        <video preload="metadata" muted playsinline>
+                            <source src="${video.url}">
+                            Tu navegador no soporta videos.
+                        </video>
                         <div class="play-icon">▶</div>
                         <div class="item-label">${video.nombre}</div>
                     </div>`;
@@ -171,16 +192,17 @@
             }
         }
 
-        // Lógica del Modal y Carrusel
         const modal = document.getElementById('visor-modal');
         const contenidoModal = document.getElementById('contenido-modal');
         const tituloAlbum = document.getElementById('titulo-album');
+        const cajaEnlaceVideo = document.getElementById('caja-enlace-video');
+        const inputUrlVideo = document.getElementById('input-url-video');
         
         let indiceActual = 0;
         let arrayActualModal = [];
         let tituloActualModal = '';
         let tipoModalActual = '';
-        let hlsInstance = null; // Instancia global para HLS
+        let hlsInstance = null;
 
         window.abrirAlbumFotos = function(indexAlbum) {
             tipoModalActual = 'foto';
@@ -189,6 +211,7 @@
             tituloActualModal = albumSeleccionado.nombre;
             indiceActual = 0;
 
+            cajaEnlaceVideo.style.display = 'none'; // Ocultar cuadro de enlace si es foto
             modal.style.display = 'flex';
             mostrarItemActual();
         }
@@ -200,12 +223,13 @@
             tituloActualModal = videoSeleccionado.nombre;
             indiceActual = 0;
 
+            inputUrlVideo.value = videoSeleccionado.url; // Llenar el input con el enlace del video
+            cajaEnlaceVideo.style.display = 'block';     // Mostrar cuadro de enlace alternativo
             modal.style.display = 'flex';
             mostrarItemActual();
         }
 
         function mostrarItemActual() {
-            // Destruir instancia anterior de HLS si existía
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
@@ -231,19 +255,20 @@
                     const video = document.createElement('video');
                     video.controls = true;
                     video.autoplay = true;
+                    video.playsInline = true;
 
-                    // Soporte para archivos .m3u8 (HLS)
                     if (urlActual.includes('.m3u8')) {
                         if (Hls.isSupported()) {
                             hlsInstance = new Hls();
                             hlsInstance.loadSource(urlActual);
                             hlsInstance.attachMedia(video);
                         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                            // Soporte nativo en Safari / iOS
                             video.src = urlActual;
                         }
                     } else {
-                        video.src = urlActual;
+                        const source = document.createElement('source');
+                        source.src = urlActual;
+                        video.appendChild(source);
                     }
 
                     contenidoModal.appendChild(video);
@@ -251,6 +276,16 @@
                 
                 contenidoModal.style.opacity = 1;
             }, 150);
+        }
+
+        window.copiarEnlaceVideo = function() {
+            inputUrlVideo.select();
+            inputUrlVideo.setSelectionRange(0, 99999); // Para dispositivos móviles
+            navigator.clipboard.writeText(inputUrlVideo.value).then(() => {
+                alert("¡Enlace copiado al portapapeles!");
+            }).catch(err => {
+                console.error("Error al copiar: ", err);
+            });
         }
 
         window.navegar = function(direccion) {
@@ -268,6 +303,7 @@
             }
             modal.style.display = 'none';
             contenidoModal.innerHTML = ''; 
+            cajaEnlaceVideo.style.display = 'none';
         }
 
         modal.addEventListener('click', function(e) {
@@ -282,22 +318,23 @@
             }
         });
 
-        // Gestos táctiles (Swipe)
         let touchstartX = 0;
         let touchendX = 0;
 
-        contenidoModal.addEventListener('touchstart', e => {
+        document.getElementById('contenedor-modal').addEventListener('touchstart', e => {
             touchstartX = e.changedTouches[0].screenX;
         }, { passive: true });
 
-        contenidoModal.addEventListener('touchend', e => {
+        document.getElementById('contenedor-modal').addEventListener('touchend', e => {
             touchendX = e.changedTouches[0].screenX;
             manejarSwipe();
         }, { passive: true });
 
         function manejarSwipe() {
-            if (touchendX < touchstartX - 50) navegar(1);  
-            if (touchendX > touchstartX + 50) navegar(-1); 
+            if (tipoModalActual === 'foto') {
+                if (touchendX < touchstartX - 50) navegar(1);  
+                if (touchendX > touchstartX + 50) navegar(-1); 
+            }
         }
     </script>
 </body>
