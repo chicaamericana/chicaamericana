@@ -6,138 +6,138 @@
     <title>Panel de Administración | Chica Americana</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 2rem; background-color: #121212; color: #ffffff; }
-        h1, h2 { text-align: center; font-weight: 300; }
+        h2 { font-weight: 400; color: #f1f1f1; }
         
-        .contenedor-admin { max-width: 900px; margin: 0 auto; }
-        .panel { background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 2rem; }
+        .contenedor-admin { max-width: 1000px; margin: 0 auto; }
+        .panel { background: #1e1e1e; padding: 25px; border-radius: 10px; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.6); margin-bottom: 2rem; transition: all 0.3s ease; }
+        
+        /* Panel Retráctil */
+        .panel-header-retractil { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .panel-header-retractil:hover { opacity: 0.85; }
+        .icono-flecha { font-size: 1.1rem; transition: transform 0.3s ease; color: #2196F3; }
+        .icono-flecha.rotado { transform: rotate(180deg); }
+        #cuerpo-form-retractil { display: none; margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; }
+
         .grupo-input { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #555; background-color: #121212; color: white; box-sizing: border-box; font-size: 1rem; }
+        label { display: block; margin-bottom: 6px; color: #b0b0b0; font-size: 0.9rem; font-weight: 500; }
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background-color: #121212; color: white; box-sizing: border-box; font-size: 1rem; transition: border-color 0.2s; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2196F3; }
         
-        .btn { padding: 12px 20px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
+        .btn { padding: 12px 20px; background-color: #2196F3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s, transform 0.1s; }
         .btn:hover { background-color: #0b7dda; }
-        .btn-danger { background-color: #f44336; }
-        .btn-danger:hover { background-color: #d32f2f; }
-        .btn-warning { background-color: #ff9800; color: black; }
-        .btn-warning:hover { background-color: #e68900; }
+        .btn:active { transform: scale(0.98); }
+        .btn-danger { background-color: #e53935; }
+        .btn-danger:hover { background-color: #c62828; }
+        .btn-warning { background-color: #ffa726; color: #121212; }
+        .btn-warning:hover { background-color: #fb8c00; }
         
-        #msg { text-align: center; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        #msg { text-align: center; margin-top: 12px; font-weight: bold; font-size: 0.9rem; }
 
-        /* Estilo para botón de abrir selector modal de fotos */
-        .btn-selector-fotos { background-color: #333; border: 1px dashed #777; padding: 15px; text-align: center; border-radius: 6px; cursor: pointer; color: #ccc; margin-top: 5px; transition: 0.2s; }
-        .btn-selector-fotos:hover { background-color: #3a3a3a; color: #fff; border-color: #2196F3; }
+        /* Selector modal de fotos */
+        .btn-selector-fotos { background-color: #252525; border: 1px dashed #666; padding: 16px; text-align: center; border-radius: 8px; cursor: pointer; color: #ddd; margin-top: 5px; transition: 0.2s; }
+        .btn-selector-fotos:hover { background-color: #2a2a2a; border-color: #2196F3; color: #fff; }
 
-        /* Tabla de administración */
-        .tabla-gestion { width: 100%; border-collapse: collapse; margin-top: 1rem; background: #1e1e1e; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
-        .tabla-gestion th, .tabla-gestion td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
-        .tabla-gestion th { background-color: #2a2a2a; color: #ddd; font-weight: 600; }
-        .tabla-gestion tr:hover { background-color: #252525; }
-        .miniatura { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: #000; }
-        .acciones-td { display: flex; gap: 8px; }
-        .acciones-td button { padding: 6px 10px; font-size: 0.85rem; width: auto; }
+        /* Cuadrícula de 4 columnas para la Base de Datos */
+        .cuadricula-db-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 1rem; }
+        .tarjeta-db { background: #252525; border-radius: 8px; border: 1px solid #383838; overflow: hidden; cursor: pointer; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+        .tarjeta-db:hover { transform: translateY(-3px); border-color: #2196F3; box-shadow: 0 6px 15px rgba(33, 150, 243, 0.15); }
+        .tarjeta-db-img-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; overflow: hidden; }
+        .tarjeta-db-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .tarjeta-db-body { padding: 12px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+        .tarjeta-db-titulo { font-size: 0.95rem; font-weight: 600; color: #fff; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* Badges */
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: inline-block; width: fit-content; }
+        .badge-foto { background: rgba(33, 150, 243, 0.15); color: #2196F3; border: 1px solid rgba(33, 150, 243, 0.3); }
+        .badge-video { background: rgba(156, 39, 176, 0.15); color: #ab47bc; border: 1px solid rgba(156, 39, 176, 0.3); }
 
-        /* VENTANA MODAL / CUADRÍCULA DE 4 COLUMNAS PARA FOTOS */
-        #modal-fotos { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(10px); justify-content: center; align-items: center; }
-        .modal-contenido { background: #1e1e1e; width: 85%; max-width: 700px; max-height: 80vh; border-radius: 10px; border: 1px solid #444; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
-        .modal-header { padding: 15px 20px; background: #2a2a2a; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        .modal-header h3 { margin: 0; font-size: 1.2rem; }
-        .cerrar-modal-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        /* Ventanas Modales */
+        .modal-overlay { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; }
+        .modal-contenido { background: #1e1e1e; width: 85%; max-width: 650px; max-height: 85vh; border-radius: 12px; border: 1px solid #444; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+        .modal-header { padding: 16px 20px; background: #252525; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .modal-header h3 { margin: 0; font-size: 1.1rem; }
+        .cerrar-modal-btn { background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer; }
         .modal-body { padding: 20px; overflow-y: auto; flex-grow: 1; }
 
-        /* Cuadrícula estricta de 4 columnas */
         .cuadricula-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .celda-grid { aspect-ratio: 1/1; background: #121212; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
+        .celda-grid { aspect-ratio: 1/1; background: #121212; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
         .celda-grid img { width: 100%; height: 100%; object-fit: cover; }
-        .celda-grid button.borrar-foto-grid { position: absolute; top: 5px; right: 5px; background: rgba(244,67,54,0.8); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .celda-grid button.borrar-foto-grid:hover { background: #f44336; }
+        .celda-grid button.borrar-foto-grid { position: absolute; top: 6px; right: 6px; background: rgba(229,57,53,0.9); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .celda-grid button.borrar-foto-grid:hover { background: #e53935; }
         
-        /* Celda de agregar con el signo más */
         .celda-agregar { background: #222; border: 2px dashed #555; cursor: pointer; flex-direction: column; transition: 0.2s; }
-        .celda-agregar:hover { border-color: #2196F3; background: #2a2a2a; }
-        .simbolo-mas { font-size: 2.5rem; color: #aaa; font-weight: 300; line-height: 1; }
+        .celda-agregar:hover { border-color: #2196F3; background: #282828; }
+        .simbolo-mas { font-size: 2.2rem; color: #aaa; font-weight: 300; line-height: 1; }
         .texto-mas { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <div class="contenedor-admin">
-        <h1>Panel de Administración</h1>
-        <p style="text-align: center; color: #aaa; margin-bottom: 2rem;">Gestiona tu contenido, álbumes y videos por archivo individual</p>
-
-        <!-- FORMULARIO DE CREACIÓN / EDICIÓN -->
+        
+        <!-- PANEL DE CREACIÓN RETRÁCTIL -->
         <div class="panel">
-            <h2 id="titulo-form" style="margin-top: 0;">Agregar Nuevo Contenido</h2>
-            <input type="hidden" id="edit-id">
+            <div class="panel-header-retractil" onclick="togglePanelCreacion()">
+                <h2 style="margin: 0;">➕ Agregar Nuevo Contenido</h2>
+                <span id="icono-flecha" class="icono-flecha">▼</span>
+            </div>
             
-            <div class="grupo-input">
-                <label for="tipo">Tipo de contenido:</label>
-                <select id="tipo" onchange="cambiarTipoFormulario()">
-                    <option value="foto">Álbum de Fotografías (Múltiples fotos)</option>
-                    <option value="video">Video (Archivo Individual)</option>
-                </select>
-            </div>
+            <div id="cuerpo-form-retractil">
+                <div class="grupo-input" style="margin-top: 15px;">
+                    <label for="tipo">Tipo de contenido:</label>
+                    <select id="tipo" onchange="cambiarTipoFormulario()">
+                        <option value="foto">Álbum de Fotografías (Múltiples fotos)</option>
+                        <option value="video">Video (Archivo Individual)</option>
+                    </select>
+                </div>
 
-            <div class="grupo-input">
-                <label for="nombre">Nombre del Álbum o Video:</label>
-                <input type="text" id="nombre" placeholder="Ej: Sesión Verano 2026">
-            </div>
-
-            <!-- CONTENEDOR SI ES VIDEO (URL Simple y Portada Opcional) -->
-            <div id="grupo-video" style="display: none;">
                 <div class="grupo-input">
-                    <label for="url-video">URL del Video:</label>
-                    <input type="text" id="url-video" placeholder="https://ejemplo.com/video.mp4">
+                    <label for="nombre">Nombre del Álbum o Video:</label>
+                    <input type="text" id="nombre" placeholder="Ej: Sesión Verano 2026">
                 </div>
-                <div class="grupo-input">
-                    <label for="url-portada-video">URL de la Imagen de Portada (Opcional):</label>
-                    <input type="text" id="url-portada-video" placeholder="https://ejemplo.com/miniatura.jpg">
-                </div>
-            </div>
 
-            <!-- CONTENEDOR SI ES FOTO (Gestión mediante Cuadrícula Modal) -->
-            <div class="grupo-input" id="grupo-fotos">
-                <label>Imágenes del Álbum:</label>
-                <div class="btn-selector-fotos" onclick="abrirModalFotos()">
-                    📷 <span id="contador-fotos-btn">0 fotos agregadas</span> (Haz clic para configurar)
+                <!-- CONTENEDOR SI ES VIDEO -->
+                <div id="grupo-video" style="display: none;">
+                    <div class="grupo-input">
+                        <label for="url-video">URL del Video:</label>
+                        <input type="text" id="url-video" placeholder="https://ejemplo.com/video.mp4">
+                    </div>
+                    <div class="grupo-input">
+                        <label for="url-portada-video">URL de la Imagen de Portada (Opcional):</label>
+                        <input type="text" id="url-portada-video" placeholder="https://ejemplo.com/miniatura.jpg">
+                    </div>
                 </div>
-            </div>
 
-            <button class="btn" id="btn-accion" onclick="guardarContenido()">Publicar en el Portafolio</button>
-            <button class="btn btn-warning" id="btn-cancelar" onclick="limpiarFormulario()" style="display:none; margin-top: 8px;">Cancelar Edición</button>
-            <p id="msg"></p>
+                <!-- CONTENEDOR SI ES FOTO -->
+                <div class="grupo-input" id="grupo-fotos">
+                    <label>Imágenes del Álbum:</label>
+                    <div class="btn-selector-fotos" onclick="abrirModalFotos()">
+                        📷 <span id="contador-fotos-btn">0 fotos agregadas</span> <span style="color: #2196F3; font-weight: 500;">(Haz clic para configurar)</span>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="guardarContenidoNuevo()">Publicar en el Portafolio</button>
+                <p id="msg"></p>
+            </div>
         </div>
 
-        <!-- TABLA DE GESTIÓN -->
-        <div class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-                <h2 style="margin: 0;">Registros en la Base de Datos</h2>
-                <!-- Buscador rápido -->
+        <!-- CUADRÍCULA DE REGISTROS (BASE DE DATOS) -->
+        <div class="panel" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 12px;">
+                <h2 style="margin: 0;">📚 Registros en la Base de Datos</h2>
                 <div style="width: 280px;">
-                    <input type="text" id="buscador-admin" placeholder="Buscar por nombre..." onkeyup="filtrarRegistros()" style="padding: 8px 12px; font-size: 0.9rem;">
+                    <input type="text" id="buscador-admin" placeholder="Buscar por nombre..." onkeyup="filtrarRegistros()" style="padding: 10px 14px; font-size: 0.9rem;">
                 </div>
             </div>
             
-            <div style="overflow-x: auto;">
-                <table class="tabla-gestion">
-                    <thead>
-                        <tr>
-                            <th>Vista previa</th>
-                            <th>Tipo</th>
-                            <th>Nombre</th>
-                            <th>Detalle / URL</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-admin">
-                        <!-- Se llena con JS -->
-                    </tbody>
-                </table>
+            <div class="cuadricula-db-4col" id="lista-admin">
+                <!-- Se llena con JS en formato de cuadrícula -->
             </div>
         </div>
     </div>
 
-    <!-- VENTANA MODAL / CUADRÍCULA DE FOTOS -->
-    <div id="modal-fotos">
+    <!-- VENTANA MODAL / CUADRÍCULA DE FOTOS PARA CREACIÓN -->
+    <div id="modal-fotos" class="modal-overlay">
         <div class="modal-contenido">
             <div class="modal-header">
                 <h3>Gestionar Fotos del Álbum</h3>
@@ -145,7 +145,72 @@
             </div>
             <div class="modal-body">
                 <div class="cuadricula-4col" id="cuadricula-modal">
-                    <!-- Las fotos agregadas y el botón con el "+" se inyectan aquí -->
+                    <!-- Dinámico -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA MODAL PARA EDITAR / ELIMINAR ARCHIVO SELECCIONADO -->
+    <div id="modal-item-detalle" class="modal-overlay">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3 id="modal-item-titulo-header">Gestionar Archivo</h3>
+                <button class="cerrar-modal-btn" onclick="cerrarModalItem()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modal-edit-id">
+                
+                <div class="grupo-input">
+                    <label for="modal-input-tipo">Tipo de contenido:</label>
+                    <select id="modal-input-tipo" disabled style="background-color: #1a1a1a; color: #888;">
+                        <option value="foto">Álbum de Fotografías</option>
+                        <option value="video">Video</option>
+                    </select>
+                </div>
+
+                <div class="grupo-input">
+                    <label for="modal-input-nombre">Nombre:</label>
+                    <input type="text" id="modal-input-nombre">
+                </div>
+
+                <div id="modal-grupo-video" style="display:none;">
+                    <div class="grupo-input">
+                        <label for="modal-input-urlvideo">URL del Video:</label>
+                        <input type="text" id="modal-input-urlvideo">
+                    </div>
+                    <div class="grupo-input">
+                        <label for="modal-input-portada">URL Portada:</label>
+                        <input type="text" id="modal-input-portada">
+                    </div>
+                </div>
+
+                <div id="modal-grupo-fotos" style="display:none;">
+                    <label>Fotos del álbum (Puedes agregar o quitar):</label>
+                    <div class="btn-selector-fotos" onclick="abrirModalFotosEdicion()">
+                        📷 <span id="modal-contador-fotos">0 fotos</span> <span style="color: #2196F3;">(Modificar fotos)</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn" onclick="guardarCambiosModal()">Guardar Cambios</button>
+                    <button class="btn btn-danger" onclick="eliminarItemModal()">Eliminar Registro</button>
+                </div>
+                <p id="modal-msg" style="text-align: center; margin-top: 10px; font-size: 0.9rem;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA MODAL / CUADRÍCULA DE FOTOS PARA EDICIÓN -->
+    <div id="modal-fotos-edicion" class="modal-overlay">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3>Editar Fotos del Álbum</h3>
+                <button class="cerrar-modal-btn" onclick="cerrarModalFotosEdicion()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="cuadricula-4col" id="cuadricula-modal-edicion">
+                    <!-- Dinámico -->
                 </div>
             </div>
         </div>
@@ -159,11 +224,23 @@
         const firebaseConfig = { apiKey: "AIzaSyCd5evRX5lv8ulopShw0gJ_iCpnaMQxays", authDomain: "chica-americana.firebaseapp.com", projectId: "chica-americana", storageBucket: "chica-americana.firebasestorage.app", messagingSenderId: "20615894861", appId: "1:20615894861:web:67895bcdec88371e318904" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        let editandoId = null;
         let listaFotosTemporal = []; 
-        let registrosGlobales = []; // Almacena los datos para el buscador
+        let listaFotosEdicionTemporal = [];
+        let registrosGlobales = [];
 
-        // Cambiar interfaz según selección foto/video
+        // Panel Retráctil
+        window.togglePanelCreacion = function() {
+            const cuerpo = document.getElementById('cuerpo-form-retractil');
+            const flecha = document.getElementById('icono-flecha');
+            if(cuerpo.style.display === 'none' || cuerpo.style.display === '') {
+                cuerpo.style.display = 'block';
+                flecha.classList.add('rotado');
+            } else {
+                cuerpo.style.display = 'none';
+                flecha.classList.remove('rotado');
+            }
+        }
+
         window.cambiarTipoFormulario = function() {
             const tipo = document.getElementById('tipo').value;
             if(tipo === 'foto') {
@@ -175,7 +252,7 @@
             }
         }
 
-        // Abrir y cerrar Modal de Fotos
+        // Modales de Fotos Creación
         window.abrirModalFotos = function() {
             document.getElementById('modal-fotos').style.display = 'flex';
             renderizarCuadriculaModal();
@@ -190,30 +267,22 @@
             document.getElementById('contador-fotos-btn').innerText = total === 1 ? '1 foto agregada' : `${total} fotos agregadas`;
         }
 
-        // Renderizar la cuadrícula de 4 columnas dentro del modal
         function renderizarCuadriculaModal() {
             const grid = document.getElementById('cuadricula-modal');
             grid.innerHTML = '';
-
             listaFotosTemporal.forEach((url, index) => {
                 const celda = document.createElement('div');
                 celda.className = 'celda-grid';
                 celda.innerHTML = `
                     <img src="${url}" onerror="this.src='https://via.placeholder.com/150?text=Error+URL'">
-                    <button class="borrar-foto-grid" onclick="eliminarFotoTemporal(${index})" title="Eliminar foto">&times;</button>
+                    <button class="borrar-foto-grid" onclick="eliminarFotoTemporal(${index})">&times;</button>
                 `;
                 grid.appendChild(celda);
             });
-
             const celdaMas = document.createElement('div');
             celdaMas.className = 'celda-grid celda-agregar';
             celdaMas.onclick = pedirNuevaUrlFoto;
-            celdaMas.innerHTML = `
-                <div style="text-align:center;">
-                    <div class="simbolo-mas">+</div>
-                    <div class="texto-mas">Añadir foto</div>
-                </div>
-            `;
+            celdaMas.innerHTML = `<div style="text-align:center;"><div class="simbolo-mas">+</div><div class="texto-mas">Añadir foto</div></div>`;
             grid.appendChild(celdaMas);
         }
 
@@ -226,86 +295,75 @@
         }
 
         window.eliminarFotoTemporal = function(index) {
-            if(confirm("¿Deseas eliminar esta foto del álbum?")) {
+            if(confirm("¿Deseas eliminar esta foto?")) {
                 listaFotosTemporal.splice(index, 1);
                 renderizarCuadriculaModal();
             }
         }
 
-        // Cargar registros en tiempo real en la tabla principal
+        // Firestore Listener
         onSnapshot(collection(db, "multimedia"), (snapshot) => {
             registrosGlobales = [];
             snapshot.forEach((docSnap) => {
                 registrosGlobales.push({ id: docSnap.id, ...docSnap.data() });
             });
-            renderizarTablaAdmin(registrosGlobales);
+            renderizarCuadriculaAdmin(registrosGlobales);
         });
 
-        function renderizarTablaAdmin(datos) {
-            const tbody = document.getElementById('lista-admin');
-            tbody.innerHTML = '';
+        // Renderizar Cuadrícula 4 Columnas Base de Datos
+        function renderizarCuadriculaAdmin(datos) {
+            const container = document.getElementById('lista-admin');
+            container.innerHTML = '';
             
             if(datos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">No se encontraron registros.</td></tr>`;
+                container.innerHTML = `<div style="grid-column: span 4; text-align:center; color:#777; padding: 30px;">No se encontraron registros en la base de datos.</div>`;
                 return;
             }
 
             datos.forEach((item) => {
-                const tr = document.createElement('tr');
-                let previewHtml = '';
-                let detalleTexto = '';
+                let miniatura = '';
+                let badgeClass = item.tipo === 'foto' ? 'badge-foto' : 'badge-video';
+                let tipoTexto = item.tipo === 'foto' ? 'Álbum' : 'Video';
 
                 if(item.tipo === 'foto') {
                     const primeraFoto = Array.isArray(item.url) ? item.url[0] : item.url;
-                    const cantidad = Array.isArray(item.url) ? item.url.length : 1;
-                    previewHtml = `<img src="${primeraFoto}" class="miniatura" onerror="this.src='https://via.placeholder.com/50?text=Foto'">`;
-                    detalleTexto = `Álbum con ${cantidad} fotografía(s)`;
+                    miniatura = `<img src="${primeraFoto}" onerror="this.src='https://via.placeholder.com/150?text=Foto'">`;
                 } else {
-                    const miniaturaVideo = item.portada || 'https://via.placeholder.com/50?text=Video';
-                    previewHtml = `<img src="${miniaturaVideo}" class="miniatura" onerror="this.src='https://via.placeholder.com/50?text=Video'">`;
-                    detalleTexto = item.url;
+                    const miniaturaVideo = item.portada || 'https://via.placeholder.com/150?text=Video';
+                    miniatura = `<img src="${miniaturaVideo}" onerror="this.src='https://via.placeholder.com/150?text=Video'">`;
                 }
 
-                // Codificar de forma segura los datos para el botón de editar
-                const urlSegura = encodeURIComponent(JSON.stringify(item.url));
-                const portadaSegura = encodeURIComponent(item.portada || '');
-
-                tr.innerHTML = `
-                    <td>${previewHtml}</td>
-                    <td style="text-transform: capitalize;">${item.tipo}</td>
-                    <td><b>${item.nombre || 'Sin nombre'}</b></td>
-                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa;" title="${detalleTexto}">${detalleTexto}</td>
-                    <td>
-                        <div class="acciones-td">
-                            <button class="btn btn-warning" onclick="prepararEdicion('${item.id}', '${item.tipo}', '${escapeHtml(item.nombre || '')}', '${urlSegura}', '${portadaSegura}')">Editar</button>
-                            <button class="btn btn-danger" onclick="eliminarItem('${item.id}')">Eliminar</button>
+                const tarjeta = document.createElement('div');
+                tarjeta.className = 'tarjeta-db';
+                tarjeta.onclick = () => abrirModalItem(item);
+                tarjeta.innerHTML = `
+                    <div class="tarjeta-db-img-container">${miniatura}</div>
+                    <div class="tarjeta-db-body">
+                        <div>
+                            <span class="badge ${badgeClass}" style="margin-bottom: 6px;">${tipoTexto}</span>
+                            <div class="tarjeta-db-titulo" title="${item.nombre || 'Sin nombre'}">${item.nombre || 'Sin nombre'}</div>
                         </div>
-                    </td>
+                        <div style="font-size: 0.75rem; color: #88; text-align: right;">Haz clic para editar</div>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                container.appendChild(tarjeta);
             });
         }
 
-        // Función del buscador rápido en tiempo real
         window.filtrarRegistros = function() {
             const textoBusqueda = document.getElementById('buscador-admin').value.toLowerCase().trim();
             const filtrados = registrosGlobales.filter(item => {
                 const nombre = (item.nombre || '').toLowerCase();
                 return nombre.includes(textoBusqueda);
             });
-            renderizarTablaAdmin(filtrados);
+            renderizarCuadriculaAdmin(filtrados);
         }
 
-        function escapeHtml(text) {
-            return text.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-        }
-
-        // Guardar o Actualizar contenido en Firebase
-        window.guardarContenido = async function() {
+        // Guardar Contenido Nuevo
+        window.guardarContenidoNuevo = async function() {
             const tipo = document.getElementById('tipo').value;
             const nombre = document.getElementById('nombre').value.trim();
             const msg = document.getElementById('msg');
-            const editId = document.getElementById('edit-id').value;
 
             let datosAGuardar = "";
             let portadaVideo = "";
@@ -335,25 +393,24 @@
                 const objetoDatos = {
                     tipo: tipo,
                     nombre: nombre || "Sin título",
-                    url: datosAGuardar
+                    url: datosAGuardar,
+                    fecha: new Date()
                 };
 
                 if(tipo === 'video') {
-                    objetoDatos.portada = portadaVideo; // Se guarda la portada opcional si existe
+                    objetoDatos.portada = portadaVideo;
                 }
 
-                if(editId) {
-                    await updateDoc(doc(db, "multimedia", editId), objetoDatos);
-                    msg.style.color = "#4CAF50";
-                    msg.innerText = "¡Contenido actualizado con éxito!";
-                    limpiarFormulario();
-                } else {
-                    objetoDatos.fecha = new Date();
-                    await addDoc(collection(db, "multimedia"), objetoDatos);
-                    msg.style.color = "#4CAF50";
-                    msg.innerText = "¡Contenido publicado correctamente!";
-                    limpiarFormulario();
-                }
+                await addDoc(collection(db, "multimedia"), objetoDatos);
+                msg.style.color = "#4CAF50";
+                msg.innerText = "¡Contenido publicado correctamente!";
+                
+                // Limpiar formulario
+                document.getElementById('nombre').value = '';
+                document.getElementById('url-video').value = '';
+                document.getElementById('url-portada-video').value = '';
+                listaFotosTemporal = [];
+                actualizarContadorBotonFotos();
 
                 setTimeout(() => { msg.innerText = ""; }, 3000);
             } catch(e) {
@@ -363,51 +420,136 @@
             }
         }
 
-        // Cargar datos en el formulario para Editar
-        window.prepararEdicion = function(id, tipo, nombre, urlEncoded, portadaEncoded) {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('tipo').value = tipo;
-            document.getElementById('nombre').value = nombre === 'Sin título' ? '' : nombre;
-            
-            cambiarTipoFormulario();
+        // Modal de Edición / Gestión del Item seleccionado
+        window.abrirModalItem = function(item) {
+            document.getElementById('modal-edit-id').value = item.id;
+            document.getElementById('modal-input-tipo').value = item.tipo;
+            document.getElementById('modal-input-nombre').value = item.nombre || '';
+            document.getElementById('modal-msg').innerText = '';
 
-            let urlDecodificada = JSON.parse(decodeURIComponent(urlEncoded));
-            let portadaDecodificada = decodeURIComponent(portadaEncoded);
+            if(item.tipo === 'foto') {
+                document.getElementById('modal-grupo-video').style.display = 'none';
+                document.getElementById('modal-grupo-fotos').style.display = 'block';
+                listaFotosEdicionTemporal = Array.isArray(item.url) ? [...item.url] : [item.url];
+                actualizarContadorEdicionFotos();
+            } else {
+                document.getElementById('modal-grupo-video').style.display = 'block';
+                document.getElementById('modal-grupo-fotos').style.display = 'none';
+                document.getElementById('modal-input-urlvideo').value = item.url || '';
+                document.getElementById('modal-input-portada').value = item.portada || '';
+            }
+
+            document.getElementById('modal-item-titulo-header').innerText = `Editar ${item.tipo === 'foto' ? 'Álbum' : 'Video'}`;
+            document.getElementById('modal-item-detalle').style.display = 'flex';
+        }
+
+        window.cerrarModalItem = function() {
+            document.getElementById('modal-item-detalle').style.display = 'none';
+        }
+
+        function actualizarContadorEdicionFotos() {
+            const total = listaFotosEdicionTemporal.length;
+            document.getElementById('modal-contador-fotos').innerText = total === 1 ? '1 foto' : `${total} fotos`;
+        }
+
+        window.abrirModalFotosEdicion = function() {
+            document.getElementById('modal-fotos-edicion').style.display = 'flex';
+            renderizarCuadriculaEdicionModal();
+        }
+        window.cerrarModalFotosEdicion = function() {
+            document.getElementById('modal-fotos-edicion').style.display = 'none';
+            actualizarContadorEdicionFotos();
+        }
+
+        function renderizarCuadriculaEdicionModal() {
+            const grid = document.getElementById('cuadricula-modal-edicion');
+            grid.innerHTML = '';
+            listaFotosEdicionTemporal.forEach((url, index) => {
+                const celda = document.createElement('div');
+                celda.className = 'celda-grid';
+                celda.innerHTML = `
+                    <img src="${url}" onerror="this.src='https://via.placeholder.com/150?text=Error+URL'">
+                    <button class="borrar-foto-grid" onclick="eliminarFotoEdicionTemporal(${index})">&times;</button>
+                `;
+                grid.appendChild(celda);
+            });
+            const celdaMas = document.createElement('div');
+            celdaMas.className = 'celda-grid celda-agregar';
+            celdaMas.onclick = pedirNuevaUrlFotoEdicion;
+            celdaMas.innerHTML = `<div style="text-align:center;"><div class="simbolo-mas">+</div><div class="texto-mas">Añadir foto</div></div>`;
+            grid.appendChild(celdaMas);
+        }
+
+        window.pedirNuevaUrlFotoEdicion = function() {
+            const nuevaUrl = prompt("Pega la URL de la nueva fotografía:");
+            if(nuevaUrl && nuevaUrl.trim() !== "") {
+                listaFotosEdicionTemporal.push(nuevaUrl.trim());
+                renderizarCuadriculaEdicionModal();
+            }
+        }
+
+        window.eliminarFotoEdicionTemporal = function(index) {
+            if(confirm("¿Deseas eliminar esta foto?")) {
+                listaFotosEdicionTemporal.splice(index, 1);
+                renderizarCuadriculaEdicionModal();
+            }
+        }
+
+        window.guardarCambiosModal = async function() {
+            const id = document.getElementById('modal-edit-id').value;
+            const tipo = document.getElementById('modal-input-tipo').value;
+            const nombre = document.getElementById('modal-input-nombre').value.trim();
+            const msg = document.getElementById('modal-msg');
+
+            let datosActualizados = {};
 
             if(tipo === 'foto') {
-                listaFotosTemporal = Array.isArray(urlDecodificada) ? urlDecodificada : [urlDecodificada];
-                actualizarContadorBotonFotos();
+                if(listaFotosEdicionTemporal.length === 0) {
+                    msg.style.color = "#ff4444";
+                    msg.innerText = "El álbum debe tener al menos una foto.";
+                    return;
+                }
+                datosActualizados = {
+                    nombre: nombre || "Sin título",
+                    url: listaFotosEdicionTemporal
+                };
             } else {
-                document.getElementById('url-video').value = urlDecodificada;
-                document.getElementById('url-portada-video').value = portadaDecodificada !== 'null' ? portadaDecodificada : '';
+                const urlVideo = document.getElementById('modal-input-urlvideo').value.trim();
+                const portadaVideo = document.getElementById('modal-input-portada').value.trim();
+                if(!urlVideo) {
+                    msg.style.color = "#ff4444";
+                    msg.innerText = "La URL del video no puede estar vacía.";
+                    return;
+                }
+                datosActualizados = {
+                    nombre: nombre || "Sin título",
+                    url: urlVideo,
+                    portada: portadaVideo
+                };
             }
-            
-            document.getElementById('titulo-form').innerText = "Editar Contenido";
-            document.getElementById('btn-accion').innerText = "Guardar Cambios";
-            document.getElementById('btn-cancelar').style.display = "block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            try {
+                msg.style.color = "#aaa";
+                msg.innerText = "Actualizando...";
+                await updateDoc(doc(db, "multimedia", id), datosActualizados);
+                msg.style.color = "#4CAF50";
+                msg.innerText = "¡Actualizado con éxito!";
+                setTimeout(() => {
+                    cerrarModalItem();
+                }, 1000);
+            } catch(e) {
+                console.error(e);
+                msg.style.color = "#ff4444";
+                msg.innerText = "Error al actualizar.";
+            }
         }
 
-        window.limpiarFormulario = function() {
-            document.getElementById('edit-id').value = '';
-            document.getElementById('tipo').value = 'foto';
-            document.getElementById('nombre').value = '';
-            document.getElementById('url-video').value = '';
-            document.getElementById('url-portada-video').value = '';
-            listaFotosTemporal = [];
-            actualizarContadorBotonFotos();
-            
-            document.getElementById('titulo-form').innerText = "Agregar Nuevo Contenido";
-            document.getElementById('btn-accion').innerText = "Publicar en el Portafolio";
-            document.getElementById('btn-cancelar').style.display = "none";
-            document.getElementById('msg').innerText = '';
-            cambiarTipoFormulario();
-        }
-
-        window.eliminarItem = async function(id) {
+        window.eliminarItemModal = async function() {
+            const id = document.getElementById('modal-edit-id').value;
             if(confirm("¿Estás seguro de que deseas eliminar este registro por completo?")) {
                 try {
                     await deleteDoc(doc(db, "multimedia", id));
+                    cerrarModalItem();
                 } catch(e) {
                     console.error("Error al eliminar: ", e);
                     alert("No se pudo eliminar el elemento.");
