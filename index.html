@@ -3,65 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Portafolio | Álbum Interactivo</title>
+    <title>Mi Portafolio | Estilo Instagram</title>
     <!-- HLS.js para archivos m3u8 -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <!-- Dash.js para archivos dash / mpd -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #121212; color: #ffffff; }
-        h2 { text-align: center; font-weight: 300; }
-        section { padding: 2rem 5%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #000; color: #ffffff; }
         
-        .galeria-tabla { width: 100%; border-collapse: separate; border-spacing: 15px; table-layout: fixed; margin-top: 1.5rem; }
-        .galeria-tabla td { padding: 0; vertical-align: middle; width: 25%; }
+        section { padding: 1.5rem 5%; max-width: 935px; margin: 0 auto; }
+        h2 { font-weight: 600; font-size: 1.1rem; margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase; color: #aaa; }
         
-        .item { position: relative; cursor: pointer; overflow: hidden; border-radius: 8px; aspect-ratio: 1 / 1; background-color: #222; width: 100%; }
-        .item img, .item video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
-        .item:hover img, .item:hover video { transform: scale(1.05); }
-        .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: rgba(255, 255, 255, 0.8); pointer-events: none; z-index: 2; }
+        /* Cuadrícula de 3 columnas estilo Instagram */
+        .grid-galeria { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 4px; 
+            width: 100%; 
+        }
         
-        .item-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.85rem; padding: 8px; box-sizing: border-box; text-align: center; font-weight: 500; z-index: 2; }
-
-        #visor-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); align-items: center; justify-content: center; flex-direction: column; }
-        #titulo-album { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 1.5rem; font-weight: 300; letter-spacing: 2px; margin: 0; z-index: 1002; text-shadow: 0 2px 4px rgba(0,0,0,0.8); width: 80%; text-align: center; }
+        .item { 
+            position: relative; 
+            cursor: pointer; 
+            overflow: hidden; 
+            aspect-ratio: 1 / 1; 
+            background-color: #1a1a1a; 
+        }
         
-        #contenedor-modal { display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 85%; max-height: 80vh; transition: opacity 0.3s ease; }
-        #contenido-modal { display: flex; justify-content: center; align-items: center; max-height: 70vh; width: 100%; overflow: hidden; position: relative; border-radius: 8px; }
+        .item img, .item video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transition: opacity 0.2s ease; 
+        }
         
-        /* Estilos de imagen y zoom en el modal de fotos */
-        #contenido-modal img { max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); user-select: none; transition: transform 0.2s ease; transform-origin: center center; cursor: zoom-in; }
-        #contenido-modal img.zoom-activado { transform: scale(2); cursor: zoom-out; }
+        .item:hover img, .item:hover video { 
+            opacity: 0.8; 
+        }
+        
+        .play-icon { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            font-size: 2.5rem; 
+            color: rgba(255, 255, 255, 0.9); 
+            pointer-events: none; 
+            z-index: 2; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+        
+        .item-label { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: linear-gradient(transparent, rgba(0,0,0,0.8)); 
+            font-size: 0.8rem; 
+            padding: 12px 8px 8px 8px; 
+            box-sizing: border-box; 
+            text-align: center; 
+            font-weight: 500; 
+            z-index: 2; 
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .item:hover .item-label { 
+            opacity: 1; 
+        }
 
-        #contenido-modal video, #contenido-modal iframe { max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); user-select: none; width: 100%; }
-        #contenido-modal iframe { aspect-ratio: 16/9; border: none; }
+        /* Estilos del Modal */
+        #visor-modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.92); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px); 
+            align-items: center; 
+            justify-content: center; 
+            flex-direction: column; 
+        }
+        
+        #titulo-album { 
+            position: absolute; 
+            top: 20px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            color: white; 
+            font-size: 1.1rem; 
+            font-weight: 400; 
+            letter-spacing: 1px; 
+            margin: 0; 
+            z-index: 1002; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); 
+            width: 80%; 
+            text-align: center; 
+        }
+        
+        #contenedor-modal { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            max-width: 90%; 
+            max-height: 80vh; 
+            transition: opacity 0.3s ease; 
+        }
+        
+        #contenido-modal { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            max-height: 70vh; 
+            width: 100%; 
+            overflow: hidden; 
+            position: relative; 
+            border-radius: 4px; 
+        }
+        
+        #contenido-modal img { 
+            max-width: 100%; 
+            max-height: 70vh; 
+            border-radius: 4px; 
+            user-select: none; 
+            transition: transform 0.2s ease; 
+            transform-origin: center center; 
+            cursor: zoom-in; 
+        }
+        
+        #contenido-modal img.zoom-activado { 
+            transform: scale(2); 
+            cursor: zoom-out; 
+        }
 
-        .enlace-alternativo { display: none; margin-top: 12px; width: 100%; max-width: 500px; text-align: center; }
-        .enlace-alternativo p { font-size: 0.8rem; color: #aaa; margin: 0 0 5px 0; }
-        .input-copiar-grupo { display: flex; gap: 8px; }
-        .input-copiar-grupo input { flex-grow: 1; padding: 8px 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; outline: none; }
-        .input-copiar-grupo button { padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; transition: background 0.2s; }
-        .input-copiar-grupo button:hover { background: #0b7dda; }
+        #contenido-modal video, #contenido-modal iframe { 
+            max-width: 100%; 
+            max-height: 70vh; 
+            border-radius: 4px; 
+            user-select: none; 
+            width: 100%; 
+        }
+        
+        #contenido-modal iframe { 
+            aspect-ratio: 16/9; 
+            border: none; 
+        }
 
-        .btn-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 3rem; cursor: pointer; z-index: 1002; padding: 10px 20px; background: rgba(0,0,0,0.3); border-radius: 5px; transition: background 0.3s, transform 0.2s; user-select: none; }
-        .btn-nav:hover { background: rgba(0,0,0,0.8); transform: translateY(-50%) scale(1.1); }
-        .btn-prev { left: 2%; } 
-        .btn-next { right: 2%; }
+        .enlace-alternativo { 
+            display: none; 
+            margin-top: 15px; 
+            width: 100%; 
+            max-width: 500px; 
+            text-align: center; 
+        }
+        
+        .enlace-alternativo p { 
+            font-size: 0.8rem; 
+            color: #aaa; 
+            margin: 0 0 5px 0; 
+        }
+        
+        .input-copiar-grupo { 
+            display: flex; 
+            gap: 8px; 
+        }
+        
+        .input-copiar-grupo input { 
+            flex-grow: 1; 
+            padding: 8px 12px; 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            color: #fff; 
+            border-radius: 4px; 
+            font-size: 0.85rem; 
+            outline: none; 
+        }
+        
+        .input-copiar-grupo button { 
+            padding: 8px 15px; 
+            background: #0095f6; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 0.85rem; 
+            transition: background 0.2s; 
+        }
+        
+        .input-copiar-grupo button:hover { 
+            background: #1877f2; 
+        }
 
-        .cerrar-modal { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 1002; transition: color 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .cerrar-modal:hover { color: #ff4444; }
+        .btn-nav { 
+            position: absolute; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: white; 
+            font-size: 2.5rem; 
+            cursor: pointer; 
+            z-index: 1002; 
+            padding: 10px 15px; 
+            background: rgba(0,0,0,0.4); 
+            border-radius: 50%; 
+            transition: background 0.3s; 
+            user-select: none; 
+        }
+        
+        .btn-nav:hover { 
+            background: rgba(0,0,0,0.8); 
+        }
+        
+        .btn-prev { left: 3%; } 
+        .btn-next { right: 3%; }
+
+        .cerrar-modal { 
+            position: absolute; 
+            top: 20px; 
+            right: 25px; 
+            color: #fff; 
+            font-size: 35px; 
+            font-weight: 300; 
+            cursor: pointer; 
+            z-index: 1002; 
+            transition: color 0.2s; 
+        }
+        
+        .cerrar-modal:hover { 
+            color: #ff4444; 
+        }
     </style>
 </head>
 <body>
 
-    <section id="fotos" style="padding-top: 3rem;">
-        <h2>Álbumes de Fotografías</h2>
-        <table class="galeria-tabla" id="tabla-fotos"></table>
+    <section id="fotos" style="padding-top: 2rem;">
+        <h2>Álbumes</h2>
+        <div class="grid-galeria" id="grid-fotos"></div>
     </section>
 
     <section id="videos">
-        <h2>Galería de Videos</h2>
-        <table class="galeria-tabla" id="tabla-videos"></table>
+        <h2>Videos</h2>
+        <div class="grid-galeria" id="grid-videos"></div>
     </section>
 
     <div id="visor-modal">
@@ -120,64 +308,45 @@
                     listaVideos.push({
                         nombre: nombreItem,
                         url: data.url,
-                        portada: data.portada || "" // Capturamos la portada opcional del video
+                        portada: data.portada || "" 
                     });
                 }
             });
 
-            renderizarTablas();
+            renderizarGrids();
         });
 
-        function renderizarTablas() {
-            renderizarSeccionAlbumes(albumesFotos, 'tabla-fotos');
-            renderizarSeccionVideos(listaVideos, 'tabla-videos');
+        function renderizarGrids() {
+            renderizarGridAlbumes(albumesFotos, 'grid-fotos');
+            renderizarGridVideos(listaVideos, 'grid-videos');
         }
 
-        function renderizarSeccionAlbumes(arrayAlbumes, idTabla) {
-            const tabla = document.getElementById(idTabla);
-            tabla.innerHTML = ''; 
-            let tr = null;
+        function renderizarGridAlbumes(arrayAlbumes, idGrid) {
+            const grid = document.getElementById(idGrid);
+            grid.innerHTML = ''; 
 
-            for (let i = 0; i < arrayAlbumes.length; i++) {
-                if (i % 4 === 0) {
-                    tr = document.createElement('tr');
-                    tabla.appendChild(tr);
-                }
-                const td = document.createElement('td');
-                const album = arrayAlbumes[i];
+            arrayAlbumes.forEach((album, i) => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.onclick = () => abrirAlbumFotos(i);
 
-                let contenidoHtml = `
-                    <div class="item" onclick="abrirAlbumFotos(${i})">
-                        <img src="${album.portada}" alt="${album.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
-                        <div class="item-label">${album.nombre}</div>
-                    </div>`;
+                div.innerHTML = `
+                    <img src="${album.portada}" alt="${album.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
+                    <div class="item-label">${album.nombre}</div>`;
                 
-                td.innerHTML = contenidoHtml;
-                tr.appendChild(td);
-            }
-
-            if (arrayAlbumes.length % 4 !== 0) {
-                let faltantes = 4 - (arrayAlbumes.length % 4);
-                for (let j = 0; j < faltantes; j++) {
-                    tr.appendChild(document.createElement('td'));
-                }
-            }
+                grid.appendChild(div);
+            });
         }
 
-        function renderizarSeccionVideos(arrayVideos, idTabla) {
-            const tabla = document.getElementById(idTabla);
-            tabla.innerHTML = ''; 
-            let tr = null;
+        function renderizarGridVideos(arrayVideos, idGrid) {
+            const grid = document.getElementById(idGrid);
+            grid.innerHTML = ''; 
 
-            for (let i = 0; i < arrayVideos.length; i++) {
-                if (i % 4 === 0) {
-                    tr = document.createElement('tr');
-                    tabla.appendChild(tr);
-                }
-                const td = document.createElement('td');
-                const video = arrayVideos[i];
+            arrayVideos.forEach((video, i) => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.onclick = () => abrirVideo(i);
 
-                // Si tiene portada configurada se muestra una imagen en la miniatura, de lo contrario se usa el elemento video por defecto
                 let contenidoMiniatura = '';
                 if (video.portada && video.portada.trim() !== '') {
                     contenidoMiniatura = `<img src="${video.portada}" alt="${video.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">`;
@@ -189,23 +358,13 @@
                         </video>`;
                 }
 
-                let contenidoHtml = `
-                    <div class="item" onclick="abrirVideo(${i})">
-                        ${contenidoMiniatura}
-                        <div class="play-icon">▶</div>
-                        <div class="item-label">${video.nombre}</div>
-                    </div>`;
+                div.innerHTML = `
+                    ${contenidoMiniatura}
+                    <div class="play-icon">▶</div>
+                    <div class="item-label">${video.nombre}</div>`;
                 
-                td.innerHTML = contenidoHtml;
-                tr.appendChild(td);
-            }
-
-            if (arrayVideos.length % 4 !== 0) {
-                let faltantes = 4 - (arrayVideos.length % 4);
-                for (let j = 0; j < faltantes; j++) {
-                    tr.appendChild(document.createElement('td'));
-                }
-            }
+                grid.appendChild(div);
+            });
         }
 
         const modal = document.getElementById('visor-modal');
@@ -275,7 +434,6 @@
                     const img = document.createElement('img');
                     img.src = urlActual;
                     
-                    // Doble clic para activar/desactivar zoom en la foto del álbum
                     img.addEventListener('dblclick', function() {
                         this.classList.toggle('zoom-activado');
                         if(!this.classList.contains('zoom-activado')) {
@@ -283,7 +441,6 @@
                         }
                     });
 
-                    // Permitir mover la imagen ampliada con el mouse arrastrando si está con zoom
                     let isDragging = false;
                     let startX, startY, translateX = 0, translateY = 0;
 
