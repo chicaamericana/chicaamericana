@@ -9,40 +9,103 @@
     <!-- Dash.js para archivos dash / mpd -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #000; color: #ffffff; }
+        :root {
+            --bg-color: #0f0f10;
+            --card-bg: #1a1a1e;
+            --card-hover: #26262b;
+            --accent-color: #0095f6;
+            --accent-hover: #1877f2;
+            --text-color: #f5f5f7;
+            --text-muted: #a1a1a6;
+            --border-color: #2d2d32;
+            --radius-lg: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
         
         /* Buscador superior */
         .buscador-container { 
-            padding: 1.5rem 5% 0.5rem 5%; 
+            padding: 1.5rem 1rem 0.5rem 1rem; 
             max-width: 935px; 
             margin: 0 auto; 
-            box-sizing: border-box; 
-        }
-        #input-buscador { 
-            width: 100%; 
-            padding: 12px 18px; 
-            background-color: #1a1a1a; 
-            border: 1px solid #333; 
-            border-radius: 8px; 
-            color: #fff; 
-            font-size: 0.95rem; 
-            outline: none; 
-            box-sizing: border-box; 
-            transition: border-color 0.2s; 
-        }
-        #input-buscador:focus { 
-            border-color: #0095f6; 
         }
 
-        section { padding: 1.5rem 5%; max-width: 935px; margin: 0 auto; }
-        h2 { font-weight: 600; font-size: 1.1rem; margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase; color: #aaa; }
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            width: 18px;
+            height: 18px;
+            fill: var(--text-muted);
+            pointer-events: none;
+        }
+
+        #input-buscador { 
+            width: 100%; 
+            padding: 12px 16px 12px 42px; 
+            background-color: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--radius-lg); 
+            color: var(--text-color); 
+            font-size: 0.95rem; 
+            outline: none; 
+            transition: all 0.2s ease; 
+        }
+
+        #input-buscador:focus { 
+            border-color: var(--accent-color); 
+            box-shadow: 0 0 0 3px rgba(0, 149, 246, 0.15);
+        }
+
+        section { 
+            padding: 1.25rem 1rem; 
+            max-width: 935px; 
+            margin: 0 auto; 
+        }
+
+        h2 { 
+            font-weight: 600; 
+            font-size: 1.1rem; 
+            margin-bottom: 14px; 
+            letter-spacing: 0.5px; 
+            text-transform: uppercase; 
+            color: var(--text-muted); 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         
-        /* Cuadrícula de 3 columnas estilo Instagram */
+        /* Cuadrícula adaptable */
         .grid-galeria { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 4px; 
+            gap: 12px; 
             width: 100%; 
+        }
+
+        @media (max-width: 600px) {
+            .grid-galeria {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
         }
         
         .item { 
@@ -50,18 +113,27 @@
             cursor: pointer; 
             overflow: hidden; 
             aspect-ratio: 1 / 1; 
-            background-color: #1a1a1a; 
+            background-color: var(--card-bg); 
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
         }
         
         .item img, .item video { 
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
-            transition: opacity 0.2s ease; 
+            transition: transform 0.3s ease, opacity 0.2s ease; 
         }
         
         .item:hover img, .item:hover video { 
-            opacity: 0.8; 
+            transform: scale(1.04);
+            opacity: 0.9; 
         }
         
         .play-icon { 
@@ -69,11 +141,23 @@
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            font-size: 2.5rem; 
-            color: rgba(255, 255, 255, 0.9); 
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff; 
             pointer-events: none; 
             z-index: 2; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .item:hover .play-icon {
+            transform: translate(-50%, -50%) scale(1.1);
+            background: var(--accent-color);
         }
         
         .item-label { 
@@ -81,15 +165,18 @@
             bottom: 0; 
             left: 0; 
             width: 100%; 
-            background: linear-gradient(transparent, rgba(0,0,0,0.8)); 
-            font-size: 0.8rem; 
-            padding: 12px 8px 8px 8px; 
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%); 
+            font-size: 0.85rem; 
+            padding: 20px 10px 10px 10px; 
             box-sizing: border-box; 
             text-align: center; 
             font-weight: 500; 
             z-index: 2; 
             opacity: 0;
             transition: opacity 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .item:hover .item-label { 
@@ -102,49 +189,67 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: #161616;
+            background-color: var(--card-bg);
             aspect-ratio: 1 / 1;
             cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
-            border: 2px dashed #333;
+            transition: all 0.2s ease;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-sm);
             text-align: center;
             padding: 10px;
-            box-sizing: border-box;
         }
+
         .item-ver-mas:hover {
-            background-color: #222;
-            border-color: #0095f6;
+            background-color: var(--card-hover);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
         }
+
         .item-ver-mas span {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #0095f6;
+            color: var(--accent-color);
             margin-top: 8px;
         }
+
         .item-ver-mas svg {
-            width: 30px;
-            height: 30px;
-            fill: #0095f6;
+            width: 32px;
+            height: 32px;
+            fill: var(--accent-color);
+            transition: transform 0.2s ease;
+        }
+
+        .item-ver-mas:hover svg {
+            transform: scale(1.1);
         }
 
         /* Cabecera de vistas secundarias */
         .header-vista { 
             display: flex; 
             align-items: center; 
-            gap: 20px; 
+            gap: 16px; 
             margin-bottom: 20px; 
         }
+
         .btn-volver { 
-            background: none; 
-            border: none; 
-            color: #0095f6; 
-            font-size: 1rem; 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            color: var(--text-color); 
+            font-size: 0.9rem; 
             cursor: pointer; 
-            font-weight: 600; 
-            padding: 0; 
+            font-weight: 500; 
+            padding: 8px 14px; 
+            border-radius: var(--radius-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
         }
+
         .btn-volver:hover { 
-            text-decoration: underline; 
+            background-color: var(--card-hover);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
         }
 
         /* Estilos del Modal */
@@ -156,9 +261,9 @@
             top: 0; 
             width: 100%; 
             height: 100%; 
-            background-color: rgba(0, 0, 0, 0.92); 
-            backdrop-filter: blur(10px); 
-            -webkit-backdrop-filter: blur(10px); 
+            background-color: rgba(0, 0, 0, 0.94); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
             align-items: center; 
             justify-content: center; 
             flex-direction: column; 
@@ -170,9 +275,9 @@
             left: 50%; 
             transform: translateX(-50%); 
             color: white; 
-            font-size: 1.1rem; 
-            font-weight: 400; 
-            letter-spacing: 1px; 
+            font-size: 1rem; 
+            font-weight: 500; 
+            letter-spacing: 0.5px; 
             margin: 0; 
             z-index: 1002; 
             text-shadow: 0 2px 4px rgba(0,0,0,0.8); 
@@ -187,6 +292,7 @@
             justify-content: center; 
             max-width: 90%; 
             max-height: 80vh; 
+            width: 100%;
             transition: opacity 0.3s ease; 
         }
         
@@ -198,17 +304,18 @@
             width: 100%; 
             overflow: hidden; 
             position: relative; 
-            border-radius: 4px; 
+            border-radius: var(--radius-sm); 
         }
         
         #contenido-modal img { 
             max-width: 100%; 
             max-height: 70vh; 
-            border-radius: 4px; 
+            border-radius: var(--radius-sm); 
             user-select: none; 
             transition: transform 0.2s ease; 
             transform-origin: center center; 
             cursor: zoom-in; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         
         #contenido-modal img.zoom-activado { 
@@ -219,9 +326,10 @@
         #contenido-modal video, #contenido-modal iframe { 
             max-width: 100%; 
             max-height: 70vh; 
-            border-radius: 4px; 
+            border-radius: var(--radius-sm); 
             user-select: none; 
             width: 100%; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         
         #contenido-modal iframe { 
@@ -235,12 +343,16 @@
             width: 100%; 
             max-width: 500px; 
             text-align: center; 
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
         }
         
         .enlace-alternativo p { 
             font-size: 0.8rem; 
-            color: #aaa; 
-            margin: 0 0 5px 0; 
+            color: var(--text-muted); 
+            margin: 0 0 8px 0; 
         }
         
         .input-copiar-grupo { 
@@ -251,28 +363,28 @@
         .input-copiar-grupo input { 
             flex-grow: 1; 
             padding: 8px 12px; 
-            background: #1a1a1a; 
-            border: 1px solid #333; 
+            background: #101012; 
+            border: 1px solid var(--border-color); 
             color: #fff; 
-            border-radius: 4px; 
+            border-radius: 6px; 
             font-size: 0.85rem; 
             outline: none; 
         }
         
         .input-copiar-grupo button { 
-            padding: 8px 15px; 
-            background: #0095f6; 
+            padding: 8px 16px; 
+            background: var(--accent-color); 
             color: white; 
             border: none; 
-            border-radius: 4px; 
+            border-radius: 6px; 
             cursor: pointer; 
             font-weight: 600; 
             font-size: 0.85rem; 
-            transition: background 0.2s; 
+            transition: background 0.2s ease; 
         }
         
         .input-copiar-grupo button:hover { 
-            background: #1877f2; 
+            background: var(--accent-hover); 
         }
 
         .btn-nav { 
@@ -280,37 +392,59 @@
             top: 50%; 
             transform: translateY(-50%); 
             color: white; 
-            font-size: 2.5rem; 
             cursor: pointer; 
             z-index: 1002; 
-            padding: 10px 15px; 
-            background: rgba(0,0,0,0.4); 
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.1); 
+            backdrop-filter: blur(4px);
             border-radius: 50%; 
-            transition: background 0.3s; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, transform 0.2s ease; 
             user-select: none; 
         }
         
         .btn-nav:hover { 
-            background: rgba(0,0,0,0.8); 
+            background: rgba(255,255,255,0.25); 
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .btn-nav svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
         }
         
-        .btn-prev { left: 3%; } 
-        .btn-next { right: 3%; }
+        .btn-prev { left: 20px; } 
+        .btn-next { right: 20px; }
 
         .cerrar-modal { 
             position: absolute; 
             top: 20px; 
-            right: 25px; 
+            right: 20px; 
             color: #fff; 
-            font-size: 35px; 
-            font-weight: 300; 
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer; 
             z-index: 1002; 
-            transition: color 0.2s; 
+            transition: background 0.2s ease; 
+        }
+
+        .cerrar-modal svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
         }
         
         .cerrar-modal:hover { 
-            color: #ff4444; 
+            background: rgba(255, 68, 68, 0.8); 
         }
     </style>
 </head>
@@ -318,12 +452,15 @@
 
     <!-- BUSCADOR SUPERIOR -->
     <div class="buscador-container">
-        <input type="text" id="input-buscador" placeholder="Buscar álbumes o videos..." oninput="manejarBusqueda()">
+        <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" id="input-buscador" placeholder="Buscar álbumes o videos..." oninput="manejarBusqueda()">
+        </div>
     </div>
 
-    <!-- VISTA PRINCIPAL (Máximo 3 filas por sección: 8 elementos + 1 botón ver más) -->
+    <!-- VISTA PRINCIPAL -->
     <div id="vista-principal">
-        <section style="padding-top: 1rem;">
+        <section>
             <h2>Álbumes</h2>
             <div class="grid-galeria" id="grid-fotos-home"></div>
         </section>
@@ -334,12 +471,12 @@
         </section>
     </div>
 
-    <!-- VISTA TODOS LOS ÁLBUMES DE FOTOS -->
+    <!-- VISTA TODOS LOS ÁLBUMES -->
     <div id="vista-todos-fotos" style="display: none;">
-        <section style="padding-top: 1rem;">
+        <section>
             <div class="header-vista">
                 <button class="btn-volver" onclick="irAVista('principal')">&#10094; Volver al inicio</button>
-                <h2>Todos los Álbumes de Fotografías</h2>
+                <h2 style="margin-bottom: 0;">Álbumes de Fotografías</h2>
             </div>
             <div class="grid-galeria" id="grid-fotos-full"></div>
         </section>
@@ -347,26 +484,26 @@
 
     <!-- VISTA TODOS LOS VIDEOS -->
     <div id="vista-todos-videos" style="display: none;">
-        <section style="padding-top: 1rem;">
+        <section>
             <div class="header-vista">
                 <button class="btn-volver" onclick="irAVista('principal')">&#10094; Volver al inicio</button>
-                <h2>Todos los Videos</h2>
+                <h2 style="margin-bottom: 0;">Todos los Videos</h2>
             </div>
             <div class="grid-galeria" id="grid-videos-full"></div>
         </section>
     </div>
 
-    <!-- VISTA DE RESULTados DE BÚSQUEDA -->
+    <!-- VISTA DE RESULTADOS DE BÚSQUEDA -->
     <div id="vista-busqueda" style="display: none;">
-        <section style="padding-top: 1rem;">
+        <section>
             <div class="header-vista">
                 <button class="btn-volver" onclick="irAVista('principal')">&#10094; Volver al inicio</button>
-                <h2>Resultados de Búsqueda</h2>
+                <h2 style="margin-bottom: 0;">Resultados de Búsqueda</h2>
             </div>
-            <h3 style="color: #0095f6; font-size: 1rem; margin-top: 10px;">Álbumes de Fotos</h3>
+            <h3 style="color: var(--accent-color); font-size: 0.95rem; margin: 15px 0 10px 0;">Álbumes de Fotos</h3>
             <div class="grid-galeria" id="grid-busqueda-fotos"></div>
             
-            <h3 style="color: #0095f6; font-size: 1rem; margin-top: 30px;">Videos</h3>
+            <h3 style="color: var(--accent-color); font-size: 0.95rem; margin: 25px 0 10px 0;">Videos</h3>
             <div class="grid-galeria" id="grid-busqueda-videos"></div>
         </section>
     </div>
@@ -374,17 +511,23 @@
     <!-- VENTANA MODAL -->
     <div id="visor-modal">
         <h2 id="titulo-album">Nombre del Álbum</h2>
-        <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
-        <div class="btn-nav btn-prev" onclick="navegar(-1)">&#10094;</div>
-        <div class="btn-nav btn-next" onclick="navegar(1)">&#10095;</div>
+        <div class="cerrar-modal" onclick="cerrarModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </div>
+        <div class="btn-nav btn-prev" id="btn-modal-prev" onclick="navegar(-1)">
+            <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </div>
+        <div class="btn-nav btn-next" id="btn-modal-next" onclick="navegar(1)">
+            <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </div>
         
         <div id="contenedor-modal">
             <div id="contenido-modal"></div>
             <div class="enlace-alternativo" id="caja-enlace-video">
-                <p>¿Problemas para visualizar el video? Copia el enlace y ábrelo externamente:</p>
+                <p>¿Problemas para visualizar el video? Copia el enlace directo:</p>
                 <div class="input-copiar-grupo">
                     <input type="text" id="input-url-video" readonly>
-                    <button onclick="copiarEnlaceVideo()">Copiar enlace</button>
+                    <button id="btn-copiar-url" onclick="copiarEnlaceVideo()">Copiar enlace</button>
                 </div>
             </div>
         </div>
@@ -395,7 +538,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyCd5evRX5lv8ulopShw0gJ_iCpnaMQxays", authDomain: "chica-americana.firebaseapp.com", projectId: "chica-americana", storageBucket: "chica-americana.firebasestorage.app", messagingSenderId: "20615894861", appId: "1:20615894861:web:67895bcdec88371e318904" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyCd5evRX5lv8ulopShw0gJ_iCpnaMQxays", 
+            authDomain: "chica-americana.firebaseapp.com", 
+            projectId: "chica-americana", 
+            storageBucket: "chica-americana.firebasestorage.app", 
+            messagingSenderId: "20615894861", 
+            appId: "1:20615894861:web:67895bcdec88371e318904" 
+        };
         const db = getFirestore(initializeApp(firebaseConfig));
 
         let albumesFotos = []; 
@@ -436,7 +586,6 @@
                 }
             });
 
-            // Ordenar para mostrar el más reciente al principio
             albumesFotos.reverse();
             listaVideos.reverse();
 
@@ -509,7 +658,7 @@
                 div.onclick = () => abrirAlbumFotos(originalIndex);
 
                 div.innerHTML = `
-                    <img src="${album.portada}" alt="${album.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
+                    <img src="${album.portada}" alt="${album.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300/1a1a1e/ffffff?text=Error'">
                     <div class="item-label">${album.nombre}</div>`;
                 grid.appendChild(div);
             });
@@ -519,8 +668,8 @@
                 btnVerMas.className = 'item-ver-mas';
                 btnVerMas.onclick = () => irAVista('fotos');
                 btnVerMas.innerHTML = `
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-                    <span>Ver más álbumes</span>`;
+                    <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    <span>Ver más (${array.length - 8})</span>`;
                 grid.appendChild(btnVerMas);
             }
         }
@@ -539,18 +688,19 @@
 
                 let contenidoMiniatura = '';
                 if (video.portada && video.portada.trim() !== '') {
-                    contenidoMiniatura = `<img src="${video.portada}" alt="${video.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">`;
+                    contenidoMiniatura = `<img src="${video.portada}" alt="${video.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300/1a1a1e/ffffff?text=Error'">`;
                 } else {
                     contenidoMiniatura = `
                         <video preload="metadata" muted playsinline>
                             <source src="${video.url}">
-                            Tu navegador no soporta videos.
                         </video>`;
                 }
 
                 div.innerHTML = `
                     ${contenidoMiniatura}
-                    <div class="play-icon">▶</div>
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
                     <div class="item-label">${video.nombre}</div>`;
                 grid.appendChild(div);
             });
@@ -560,8 +710,8 @@
                 btnVerMas.className = 'item-ver-mas';
                 btnVerMas.onclick = () => irAVista('videos');
                 btnVerMas.innerHTML = `
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-                    <span>Ver más videos</span>`;
+                    <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    <span>Ver más (${array.length - 8})</span>`;
                 grid.appendChild(btnVerMas);
             }
         }
@@ -575,7 +725,7 @@
                 div.className = 'item';
                 div.onclick = () => abrirAlbumFotos(originalIndex);
                 div.innerHTML = `
-                    <img src="${album.portada}" alt="${album.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
+                    <img src="${album.portada}" alt="${album.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300/1a1a1e/ffffff?text=Error'">
                     <div class="item-label">${album.nombre}</div>`;
                 grid.appendChild(div);
             });
@@ -592,18 +742,19 @@
 
                 let contenidoMiniatura = '';
                 if (video.portada && video.portada.trim() !== '') {
-                    contenidoMiniatura = `<img src="${video.portada}" alt="${video.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">`;
+                    contenidoMiniatura = `<img src="${video.portada}" alt="${video.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300/1a1a1e/ffffff?text=Error'">`;
                 } else {
                     contenidoMiniatura = `
                         <video preload="metadata" muted playsinline>
                             <source src="${video.url}">
-                            Tu navegador no soporta videos.
                         </video>`;
                 }
 
                 div.innerHTML = `
                     ${contenidoMiniatura}
-                    <div class="play-icon">▶</div>
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
                     <div class="item-label">${video.nombre}</div>`;
                 grid.appendChild(div);
             });
@@ -614,7 +765,7 @@
             grid.innerHTML = '';
 
             if (array.length === 0) {
-                grid.innerHTML = `<p style="color: #777; font-size: 0.9rem; grid-column: span 3; text-align: center; padding: 20px 0;">No se encontraron resultados.</p>`;
+                grid.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1; text-align: center; padding: 20px 0;">No se encontraron resultados.</p>`;
                 return;
             }
 
@@ -626,24 +777,25 @@
                     const originalIndex = albumesFotos.indexOf(item);
                     div.onclick = () => abrirAlbumFotos(originalIndex);
                     div.innerHTML = `
-                        <img src="${item.portada}" alt="${item.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
+                        <img src="${item.portada}" alt="${item.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300/1a1a1e/ffffff?text=Error'">
                         <div class="item-label">${item.nombre}</div>`;
                 } else {
                     const originalIndex = listaVideos.indexOf(item);
                     div.onclick = () => abrirVideo(originalIndex);
                     let contenidoMiniatura = '';
                     if (item.portada && item.portada.trim() !== '') {
-                        contenidoMiniatura = `<img src="${item.portada}" alt="${item.nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">`;
+                        contenidoMiniatura = `<img src="${item.portada}" alt="${item.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300/1a1a1e/ffffff?text=Error'">`;
                     } else {
                         contenidoMiniatura = `
                             <video preload="metadata" muted playsinline>
                                 <source src="${item.url}">
-                                Tu navegador no soporta videos.
                             </video>`;
                     }
                     div.innerHTML = `
                         ${contenidoMiniatura}
-                        <div class="play-icon">▶</div>
+                        <div class="play-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
                         <div class="item-label">${item.nombre}</div>`;
                 }
                 grid.appendChild(div);
@@ -655,6 +807,8 @@
         const tituloAlbum = document.getElementById('titulo-album');
         const cajaEnlaceVideo = document.getElementById('caja-enlace-video');
         const inputUrlVideo = document.getElementById('input-url-video');
+        const btnModalPrev = document.getElementById('btn-modal-prev');
+        const btnModalNext = document.getElementById('btn-modal-next');
         
         let indiceActual = 0;
         let arrayActualModal = [];
@@ -672,6 +826,7 @@
 
             cajaEnlaceVideo.style.display = 'none';
             modal.style.display = 'flex';
+            actualizarBotonesNavegacion();
             mostrarItemActual();
         }
 
@@ -685,7 +840,18 @@
             inputUrlVideo.value = videoSeleccionado.url;
             cajaEnlaceVideo.style.display = 'block';
             modal.style.display = 'flex';
+            actualizarBotonesNavegacion();
             mostrarItemActual();
+        }
+
+        function actualizarBotonesNavegacion() {
+            if (arrayActualModal.length <= 1) {
+                btnModalPrev.style.display = 'none';
+                btnModalNext.style.display = 'none';
+            } else {
+                btnModalPrev.style.display = 'flex';
+                btnModalNext.style.display = 'flex';
+            }
         }
 
         function limpiarReproductoresPrevios() {
@@ -802,7 +968,14 @@
             inputUrlVideo.select();
             inputUrlVideo.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(inputUrlVideo.value).then(() => {
-                alert("¡Enlace copiado al portapapeles!");
+                const btn = document.getElementById('btn-copiar-url');
+                const textoOriginal = btn.innerText;
+                btn.innerText = "¡Copiado! ✓";
+                btn.style.background = "#22c55e";
+                setTimeout(() => {
+                    btn.innerText = textoOriginal;
+                    btn.style.background = "var(--accent-color)";
+                }, 2000);
             }).catch(err => {
                 console.error("Error al copiar: ", err);
             });
