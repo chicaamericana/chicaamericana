@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración | Chica Americana</title>
+    
+    <!-- Enlace al manifiesto de la PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+
     <style>
         :root {
             --bg-color: #0f0f10;
@@ -125,7 +129,6 @@
         .btn-danger { background-color: var(--danger-color); }
         .btn-danger:hover { background-color: var(--danger-hover); }
 
-        /* Tarjetas de Selección de Tipo */
         .selector-tipo-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -162,7 +165,6 @@
         .card-tipo.activa svg { fill: var(--accent-color); }
         .card-tipo span { font-size: 0.9rem; font-weight: 600; color: var(--text-color); }
 
-        /* Cuadrícula Adaptable Base de Datos */
         .cuadricula-db-4col { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
@@ -239,7 +241,6 @@
         .badge-foto { background: rgba(33, 150, 243, 0.15); color: #64b5f6; border: 1px solid rgba(33, 150, 243, 0.3); }
         .badge-video { background: rgba(156, 39, 176, 0.15); color: #ba68c8; border: 1px solid rgba(156, 39, 176, 0.3); }
 
-        /* Modales */
         .modal-overlay { 
             display: none; 
             position: fixed; 
@@ -315,7 +316,6 @@
             flex-grow: 1; 
         }
 
-        /* Área Interactiva Drag & Drop de Imágenes */
         .drop-zone {
             border: 2px dashed var(--border-color);
             border-radius: var(--radius-sm);
@@ -368,6 +368,7 @@
             align-items: center; 
             justify-content: center; 
             transition: background 0.2s ease; 
+            z-index: 5;
         }
 
         .celda-grid button.borrar-foto-grid:hover { background: var(--danger-color); }
@@ -443,7 +444,7 @@
         </div>
     </div>
 
-    <!-- MODAL AGREGAR CONTENIDO (UI MEJORADA) -->
+    <!-- MODAL AGREGAR CONTENIDO -->
     <div id="modal-crear-nuevo" class="modal-overlay">
         <div class="modal-contenido">
             <div class="modal-header">
@@ -476,8 +477,8 @@
                     <div class="drop-zone">
                         <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Ingresa la URL de la imagen y presiona <b>Añadir</b></div>
                         <div style="display: flex; gap: 8px;">
-                            <input type="text" id="input-nueva-foto-url" placeholder="https://ejemplo.com/imagen.jpg" onkeydown="if(event.key==='Enter'){agregarFotoLista(); event.preventDefault();}">
-                            <button type="button" class="btn" onclick="agregarFotoLista()">+ Añadir</button>
+                            <input type="text" id="input-nueva-foto-url" placeholder="https://ejemplo.com/imagen.jpg">
+                            <button type="button" class="btn" id="btn-add-foto-crear">+ Añadir</button>
                         </div>
                     </div>
 
@@ -485,7 +486,7 @@
                         <label style="margin:0;">Fotos preparadas (<span id="contador-fotos-creacion">0</span>)</label>
                     </div>
                     <div class="cuadricula-fotos-preview" id="cuadricula-fotos-creacion">
-                        <!-- Vista previa de chips de fotos -->
+                        <!-- Vista previa de fotos -->
                     </div>
                 </div>
 
@@ -497,7 +498,7 @@
                     </div>
                     <div class="grupo-input">
                         <label for="url-portada-video">Portada o Miniatura (URL Opcional)</label>
-                        <input type="text" id="url-portada-video" placeholder="https://ejemplo.com/portada.jpg" oninput="actualizarPreviewVideo(this.value)">
+                        <input type="text" id="url-portada-video" placeholder="https://ejemplo.com/portada.jpg">
                     </div>
                     <div class="preview-video-container" id="preview-container-video">
                         Vista previa de la miniatura
@@ -543,8 +544,8 @@
                     <div class="grupo-input">
                         <label>Agregar nueva foto al álbum:</label>
                         <div style="display: flex; gap: 8px;">
-                            <input type="text" id="input-edit-foto-url" placeholder="https://ejemplo.com/foto.jpg" onkeydown="if(event.key==='Enter'){agregarFotoEdicionLista(); event.preventDefault();}">
-                            <button type="button" class="btn" style="white-space: nowrap;" onclick="agregarFotoEdicionLista()">+ Añadir</button>
+                            <input type="text" id="input-edit-foto-url" placeholder="https://ejemplo.com/foto.jpg">
+                            <button type="button" class="btn" style="white-space: nowrap;" id="btn-add-foto-edit">+ Añadir</button>
                         </div>
                     </div>
 
@@ -581,7 +582,6 @@
         let listaFotosEdicionTemporal = [];
         let registrosGlobales = [];
 
-        // Selección Interactiva de Tipo
         window.seleccionarTipoUI = function(tipo) {
             tipoSeleccionado = tipo;
             document.getElementById('card-tipo-foto').classList.toggle('activa', tipo === 'foto');
@@ -594,12 +594,13 @@
                 document.getElementById('grupo-video').style.display = 'block';
                 document.getElementById('grupo-fotos').style.display = 'none';
             }
-        }
+        };
 
         window.abrirModalCreacion = function() {
             document.getElementById('modal-crear-nuevo').style.display = 'flex';
             document.getElementById('msg').innerText = '';
-        }
+            renderizarFotosCreacion();
+        };
 
         window.cerrarModalCreacion = function() {
             document.getElementById('modal-crear-nuevo').style.display = 'none';
@@ -610,19 +611,17 @@
             document.getElementById('preview-container-video').innerHTML = 'Vista previa de la miniatura';
             listaFotosTemporal = [];
             renderizarFotosCreacion();
-        }
+        };
 
-        window.actualizarPreviewVideo = function(url) {
-            const container = document.getElementById('preview-container-video');
-            if(url.trim()) {
-                container.innerHTML = `<img src="${url}" onerror="this.parentNode.innerHTML='URL de imagen no válida'">`;
-            } else {
-                container.innerHTML = 'Vista previa de la miniatura';
+        document.getElementById('btn-add-foto-crear').addEventListener('click', agregarFotoLista);
+        document.getElementById('input-nueva-foto-url').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                agregarFotoLista();
             }
-        }
+        });
 
-        // Fotos Creación
-        window.agregarFotoLista = function() {
+        function agregarFotoLista() {
             const input = document.getElementById('input-nueva-foto-url');
             const url = input.value.trim();
             if(url) {
@@ -635,7 +634,7 @@
         window.eliminarFotoTemporal = function(index) {
             listaFotosTemporal.splice(index, 1);
             renderizarFotosCreacion();
-        }
+        };
 
         function renderizarFotosCreacion() {
             const grid = document.getElementById('cuadricula-fotos-creacion');
@@ -650,15 +649,34 @@
             listaFotosTemporal.forEach((url, index) => {
                 const celda = document.createElement('div');
                 celda.className = 'celda-grid';
-                celda.innerHTML = `
-                    <img src="${url}" onerror="this.src='https://via.placeholder.com/150/1a1a1e/ffffff?text=Error'">
-                    <button class="borrar-foto-grid" onclick="eliminarFotoTemporal(${index})">&times;</button>
-                `;
+                
+                const img = document.createElement('img');
+                img.src = url;
+                img.onerror = function() {
+                    this.src = 'https://via.placeholder.com/150/1a1a1e/ffffff?text=Error+de+Carga';
+                };
+
+                const btn = document.createElement('button');
+                btn.className = 'borrar-foto-grid';
+                btn.innerHTML = '&times;';
+                btn.onclick = () => eliminarFotoTemporal(index);
+
+                celda.appendChild(img);
+                celda.appendChild(btn);
                 grid.appendChild(celda);
             });
         }
 
-        // Firestore Realtime Listener
+        document.getElementById('url-portada-video').addEventListener('input', function() {
+            const url = this.value.trim();
+            const container = document.getElementById('preview-container-video');
+            if(url) {
+                container.innerHTML = `<img src="${url}" onerror="this.parentNode.innerHTML='URL de imagen no válida'">`;
+            } else {
+                container.innerHTML = 'Vista previa de la miniatura';
+            }
+        });
+
         onSnapshot(collection(db, "multimedia"), (snapshot) => {
             registrosGlobales = [];
             snapshot.forEach((docSnap) => {
@@ -710,9 +728,8 @@
             const textoBusqueda = document.getElementById('buscador-admin').value.toLowerCase().trim();
             const filtrados = registrosGlobales.filter(item => (item.nombre || '').toLowerCase().includes(textoBusqueda));
             renderizarCuadriculaAdmin(filtrados);
-        }
+        };
 
-        // Publicar Registro
         window.guardarContenidoNuevo = async function() {
             const nombre = document.getElementById('nombre').value.trim();
             const msg = document.getElementById('msg');
@@ -761,9 +778,8 @@
                 msg.style.color = "#ef4444";
                 msg.innerText = "Error al conectar con la base de datos.";
             }
-        }
+        };
 
-        // Editar
         window.abrirModalItem = function(item) {
             document.getElementById('modal-edit-id').value = item.id;
             document.getElementById('modal-input-tipo').value = item.tipo;
@@ -784,13 +800,21 @@
 
             document.getElementById('modal-item-titulo-header').innerText = `Editar ${item.tipo === 'foto' ? 'Álbum' : 'Video'}`;
             document.getElementById('modal-item-detalle').style.display = 'flex';
-        }
+        };
 
         window.cerrarModalItem = function() {
             document.getElementById('modal-item-detalle').style.display = 'none';
-        }
+        };
 
-        window.agregarFotoEdicionLista = function() {
+        document.getElementById('btn-add-foto-edit').addEventListener('click', agregarFotoEdicionLista);
+        document.getElementById('input-edit-foto-url').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                agregarFotoEdicionLista();
+            }
+        });
+
+        function agregarFotoEdicionLista() {
             const input = document.getElementById('input-edit-foto-url');
             const url = input.value.trim();
             if(url) {
@@ -803,7 +827,7 @@
         window.eliminarFotoEdicionTemporal = function(index) {
             listaFotosEdicionTemporal.splice(index, 1);
             renderizarFotosEdicion();
-        }
+        };
 
         function renderizarFotosEdicion() {
             const grid = document.getElementById('cuadricula-fotos-edicion');
@@ -818,10 +842,20 @@
             listaFotosEdicionTemporal.forEach((url, index) => {
                 const celda = document.createElement('div');
                 celda.className = 'celda-grid';
-                celda.innerHTML = `
-                    <img src="${url}" onerror="this.src='https://via.placeholder.com/150/1a1a1e/ffffff?text=Error'">
-                    <button class="borrar-foto-grid" onclick="eliminarFotoEdicionTemporal(${index})">&times;</button>
-                `;
+                
+                const img = document.createElement('img');
+                img.src = url;
+                img.onerror = function() {
+                    this.src = 'https://via.placeholder.com/150/1a1a1e/ffffff?text=Error+de+Carga';
+                };
+
+                const btn = document.createElement('button');
+                btn.className = 'borrar-foto-grid';
+                btn.innerHTML = '&times;';
+                btn.onclick = () => eliminarFotoEdicionTemporal(index);
+
+                celda.appendChild(img);
+                celda.appendChild(btn);
                 grid.appendChild(celda);
             });
         }
@@ -864,7 +898,7 @@
                 msg.style.color = "#ef4444";
                 msg.innerText = "Error al actualizar.";
             }
-        }
+        };
 
         window.eliminarItemModal = async function() {
             const id = document.getElementById('modal-edit-id').value;
@@ -876,7 +910,7 @@
                     console.error(e);
                 }
             }
-        }
+        };
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
