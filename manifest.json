@@ -1,0 +1,22 @@
+{
+  "short_name": "ChicaAmericana",
+  "name": "Panel de Administración | Chica Americana",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/2196F3/ffffff?text=App",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/2196F3/ffffff?text=App",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#0f0f10",
+  "theme_color": "#2196F3",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "./"
+}
